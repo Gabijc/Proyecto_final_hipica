@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import os
 from selenium.webdriver.chrome.options import Options
 
-def get_competiciones(url, download_path):
+def get_competiciones(url):
     """
     Función que abre una nueva ventana de Chrome en la URL indicada y devuelve el driver.
 
@@ -133,7 +133,7 @@ def obtencion_año(driver):
 
 def competiciones_año(driver):
 
-    path_competiciones_año = '/html/body/form/div/div/div/ul/li[3]'
+    path_competiciones_año = '/html/body/form/div/div/div/ul/li[13]'
     comp_año = buscador_elementos(driver, path_competiciones_año).click()
     return comp_año
 

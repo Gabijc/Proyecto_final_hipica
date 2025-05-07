@@ -9,8 +9,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 from selenium.webdriver.support.ui import WebDriverWait
-import os
-from selenium.webdriver.chrome.options import Options
+
 
 def get_competiciones(url):
     """

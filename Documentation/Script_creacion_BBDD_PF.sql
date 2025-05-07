@@ -6,7 +6,7 @@ CREATE TABLE fechas(
 	id_fecha SERIAL PRIMARY KEY,
 	fecha DATE
 );
-CREATE TABLE caballos (
+CREATE TABLE caballos(
     id_caballo VARCHAR(50) PRIMARY KEY, -- Es la licencia del caballo
     nombre_caballo VARCHAR(50),
     sexo VARCHAR(50),
@@ -14,17 +14,15 @@ CREATE TABLE caballos (
     raza VARCHAR(50),
     nacionalidad VARCHAR(50),
     federacion VARCHAR(50),
-    jinete_id INT REFERENCES ciudad(id_jinete) -- duda de si poner el ON DELETE CASCADE 
+    id_disciplina INT REFERENCES disciplinas(id_disciplina) -- duda de si poner el ON DELETE CASCADE 
 );
 CREATE TABLE jinetes(
-	id_jinete VARCHAR(50) PRIMARY KEY, 
+	id_jinete VARCHAR(50) PRIMARY KEY, -- Es la licencia del jinete
     nombre_caballo VARCHAR(50),
     sexo VARCHAR(50),
-    edad INT,
-    raza VARCHAR(50),
     nacionalidad VARCHAR(50),
     federacion VARCHAR(50),
-   disciplina_id INT REFERENCES disicplinas(id_disciplina)
+    id_disciplina INT REFERENCES disicplinas(id_disciplina)
 );
 CREATE TABLE resultados_completo(
 	id_resultado SERIAL PRIMARY KEY,
@@ -76,7 +74,7 @@ CREATE TABLE pruebas_salto(
     id_prueba SERIAL PRIMARY KEY,
     prueba VARCHAR(50),
     categoría VARCHAR (50),
-    altura_obstaculos INT,
+    altura_obstaculos FLOAT, -- duda de si poner, depende de si consigo sacarlo en el scrapeo
     ámbito VARCHAR(50),
     id_fecha INT REFERENCES fechas(id_fecha),
     id_resultado INT REFERENCES resultados_salto(id_resultado)

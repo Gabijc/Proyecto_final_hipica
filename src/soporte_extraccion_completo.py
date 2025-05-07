@@ -11,6 +11,85 @@ from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPr
 from selenium.webdriver.support.ui import WebDriverWait
 from src.soporte_extraccion_general import cambio_pestaña, buscador_elementos, guardado_info
 
+def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, contenido_general):
+
+    # Guardamos la información del concurso en el diccionario creado
+    guardado_info(diccionario_concursos, contenido_general, info="concursos", ambito=ambito_buscado)
+
+    # Lista de paths posibles según el ámbito
+    if ambito_buscado == "nacional":
+        paths_botones = [ "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[20]/td[3]/a",
+                          "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a" ]
+    elif ambito_buscado == "internacional":
+        paths_botones = ["/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a",
+                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[21]/td[3]/a",
+                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[16]/td[3]/a",
+                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[19]/td[3]/a"]
+    else:
+        print(f"Ámbito '{ambito_buscado}' no reconocido.")
+        return
+
+    # Intentamos hacer clic en los paths en orden
+    clicked = False
+    for path in paths_botones:
+        try:
+            boton = buscador_elementos(driver, path)
+            boton.click()
+            clicked = True
+            break  # Si hace clic con éxito, salimos del bucle
+        except NoSuchElementException:
+            continue  # Si falla, probamos el siguiente
+
+    if not clicked:
+        print("No se pudo hacer clic en ninguno de los botones de pruebas.")
+
+        
+
+def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, lista_urls, es_primer_concurso = False):
+    
+    # Obtenemos la información del concurso que se encuentra en la tabla de las pruebas
+    path_info_restante = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td"
+                          
+    info_concurso_restante = buscador_elementos(driver, path_info_restante).text.split("\n")
+
+    if  es_primer_concurso == True:
+
+        # Creamos las nuevas claves que sacamos de la info que esta donde las pruebas
+        diccionario_concursos[info_concurso_restante[2].strip(":")] = []
+        diccionario_concursos[info_concurso_restante[4].strip(":")] = []
+        diccionario_concursos[info_concurso_restante[8].strip(":")] = []
+                
+    # metemos la info del concurso que nos falta
+    guardado_info(diccionario = diccionario_concursos, elementos = info_concurso_restante, claves = ["Inicio", "Final", "Ámbito"], indices = [3, 5, -1], info = "general")
+
+    # Obtenemos el nombre del concurso para luego meterlo en la tabla de pruebas
+    path_nombre_concurso = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[1]/div/table/tbody/tr/td[2]/table/tbody/tr"
+    nombre_concurso = buscador_elementos(driver, path_nombre_concurso).text.strip()
+
+    # Obtenemos las pruebas del concurso
+    path_pruebas = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[2]"
+    pruebas = buscador_elementos(driver, path_pruebas).text.split("\n")
+                
+    claves_pruebas = list(diccionario_pruebas.keys())
+    guardado_info(diccionario = diccionario_pruebas, elementos = pruebas, claves = claves_pruebas, indices = [6, 7, 8, 9, 10], step = 6, guardado = False, info = "general")
+
+    numero_pruebas = len(pruebas[6::6])  # Asumimos que 'Disciplina' tiene una fila por prueba
+    diccionario_pruebas["Concurso"].extend([nombre_concurso] * numero_pruebas)
+
+    # accedemos a los resultados de la primera prueba
+    path_resultados_pruebas = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[2]/div[2]/div/table/tbody/tr/td/div/div/table/tbody/tr[1]/td/div/div/table/tbody/tr[1]/td/div/div[3]/div/table/tbody/tr/td/a"
+    try:
+        buscador_elementos(driver, path_resultados_pruebas).click()
+        time.sleep(4)
+                
+        url = driver.current_url
+        lista_urls.append(url)
+        
+    except Exception as e:
+        print(f"Error al acceder a los resultados as {e}")
+
+
+
 def extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes, diccionario_caballos):
 
     siguiente_prueba_1 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[3]/div[6]/div/table/tbody/tr/td/a" # completo 

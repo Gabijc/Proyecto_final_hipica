@@ -342,3 +342,11 @@ def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, 
         
     except Exception as e:
         print(f"Error al acceder a los resultados as {e}")
+
+
+def archivos(disciplina, ambito, año):
+    concursos = f"concursos_{disciplina} _{ambito}_{año}"
+    pruebas = f"pruebas_{disciplina} _{ambito}_{año}"
+    urls = f"urls_resultados_{disciplina} _{ambito}_{año}" 
+    lista_nombres_archivos = [concursos, pruebas, urls]
+    return lista_nombres_archivos

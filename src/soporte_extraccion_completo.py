@@ -24,7 +24,7 @@ def extraccion_completo_nac(url, lista_rutas):
 
     año = obtencion_año(driver)
 
-    while año >= 2017:
+    while año >= 2023:
 
         # vamos a todos los concursos del año en el que estemos
         competiciones_año(driver)
@@ -106,7 +106,7 @@ def extraccion_completo_int(url, lista_rutas):
 
     año = obtencion_año(driver)
 
-    while año >= 2024:
+    while año >= 2023:
 
         # Buscamos los concursos del año que nos aparece
         competiciones_año(driver)

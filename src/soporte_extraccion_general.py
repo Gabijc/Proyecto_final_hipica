@@ -9,6 +9,12 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 from selenium.webdriver.support.ui import WebDriverWait
+import os
+from selenium.webdriver.chrome.options import Options
+
+#class Scrapeo:
+    # creamos el constructor
+    #def __init__(self, ):
 
 
 def get_competiciones(url):
@@ -63,7 +69,7 @@ def creacion_dictios_guardado():
 
 
 # definimos la función que nos permitirá movernos por las pestañas que se van abriendo según navegamos por la página
-def cambio_pestaña(nº_pestaña, navegador):
+def cambio_pestaña(nº_pestaña, driver):
     """
     Función que navega por las pestañas abiertas en el navegador.
 
@@ -74,10 +80,7 @@ def cambio_pestaña(nº_pestaña, navegador):
     Returns:
         Cambio a la pestaña indicada. 
     """
-    pestañas = navegador.window_handles  # Lista de pestañas abiertas
-    return navegador.switch_to.window(pestañas[nº_pestaña])  # Cambia a la pestaña que se le indique
-
-
+    driver.switch_to.window(driver.window_handles[nº_pestaña])
 
 
 def resultados_disciplina(driver, ambito = "nacional", disciplina = "salto"):
@@ -155,23 +158,27 @@ def guardado_info(diccionario,  elementos, claves = None, indices = None, defaul
                 diccionario["Disciplina"].append(elementos[4].split(":")[1].lstrip())
                 diccionario["Federación"].append(elementos[6].split(":")[1].lstrip())
                 diccionario["Resultados"].append(elementos[-1].split(":")[1][0:4].lstrip())
-                diccionario["País"].append("España")
+                diccionario["País"].append("Epaña")
 
             elif ambito == "internacional":
-                diccionario["Nombre"].append(elementos[0].split(":")[1].lstrip())
+                try:
+                    diccionario["Nombre"].append(elementos[0].split(":")[1].split("(")[0].strip())
+                except IndexError:
+                    diccionario["Nombre"].append(elementos[0].split(":")[1].lstrip())
+
                 diccionario["Categoría"].append(elementos[1].split(":")[1].lstrip())
-                diccionario["Provincia"].append(elementos[2].split(":")[1].lstrip())
+                diccionario["Provincia"].append(None)
                 diccionario["Localidad"].append(elementos[3].split(":")[1].lstrip())
                 diccionario["Disciplina"].append(elementos[4].split(":")[1].lstrip())
-                diccionario["Federación"].append(elementos[6].split(":")[1].lstrip())
+                diccionario["Federación"].append("Federación extranjera")
                 diccionario["Resultados"].append(elementos[-1].split(":")[1][0:4].lstrip())
-                diccionario["País"].append("España")
+                diccionario["País"].append(elementos[2].split(":")[1].lstrip())
 
         elif info == "jinetes":
 
             if federacion == "extranjera":
                 nombre = elementos[1].split("(")[0].strip()
-                licencia = elementos[3]
+                licencia = str(elementos[3])
                 sexo = None
                 pais = elementos[1].split("(")[1].strip(")")
                 federacion = elementos[7]
@@ -179,26 +186,19 @@ def guardado_info(diccionario,  elementos, claves = None, indices = None, defaul
 
             elif federacion == "nacional":
                 nombre = elementos[1]
-                licencia = elementos[3]
+                licencia = str(elementos[3])
                 sexo = elementos[5]
                 pais = "ESP"
                 federacion = elementos[7]
                 disciplina = elementos[-1]
             
-            jinete = (nombre, licencia, sexo, pais, federacion, disciplina)
-            jinetes_existentes = list(zip(diccionario["Nombre"],
-                                            diccionario["Licencia"],
-                                            diccionario["Sexo"],
-                                            diccionario["País"],
-                                            diccionario["Federación"],
-                                            diccionario["Disciplina"]))
-            if jinete not in jinetes_existentes:
-                diccionario["Nombre"].append(nombre)
-                diccionario["Licencia"].append(licencia)
-                diccionario["Sexo"].append(sexo)
-                diccionario["País"].append(pais)
-                diccionario["Federación"].append(federacion)
-                diccionario["Disciplina"].append(disciplina)
+
+            diccionario["Nombre"].append(nombre)
+            diccionario["Licencia"].append(licencia)
+            diccionario["Sexo"].append(sexo)
+            diccionario["País"].append(pais)
+            diccionario["Federación"].append(federacion)
+            diccionario["Disciplina"].append(disciplina)
 
         elif info == "caballos":
             if federacion == "extranjera":
@@ -214,32 +214,21 @@ def guardado_info(diccionario,  elementos, claves = None, indices = None, defaul
             elif federacion == "nacional":
                 nombre = elementos[1].split("(")[0].strip().strip(")")
                 licencia = elementos[1].split("(")[1].strip().strip(")")
-                edad = elementos[3].split("(")[0].strip()
+                edad = int(elementos[3].split("(")[0].strip())
                 raza = elementos[5]
                 pais = "ESP"
                 sexo = elementos[7]
                 federacion = elementos[8]
                 disciplina = elementos[-1]
 
-            caballo = (nombre, licencia, edad, raza, sexo, pais, federacion, disciplina)
-            caballos_existentes = list(zip(diccionario["Nombre"],
-                                            diccionario["Licencia"],
-                                            diccionario["Edad"],
-                                            diccionario["Raza"],
-                                            diccionario["País"],
-                                            diccionario["Sexo"],
-                                            diccionario["Federación"],
-                                            diccionario["Disciplina"]))
-            
-            if caballo not in caballos_existentes:
-                diccionario["Nombre"].append(nombre)
-                diccionario["Licencia"].append(licencia)
-                diccionario["Edad"].append(edad)
-                diccionario["Raza"].append(raza)
-                diccionario["País"].append(pais)
-                diccionario["Sexo"].append(sexo)
-                diccionario["Federación"].append(federacion)
-                diccionario["Disciplina"].append(disciplina)
+            diccionario["Nombre"].append(nombre)
+            diccionario["Licencia"].append(licencia)
+            diccionario["Edad"].append(edad)
+            diccionario["Raza"].append(raza)
+            diccionario["País"].append(pais)
+            diccionario["Sexo"].append(sexo)
+            diccionario["Federación"].append(federacion)
+            diccionario["Disciplina"].append(disciplina)
 
         elif info == "general":
 
@@ -276,3 +265,80 @@ def buscador_elementos(driver, elemento, busqueda = "path", cantidad = True):
     
     else: 
         raise ValueError(f"No se pueden buscar más métodos.")
+    
+def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, contenido_general):
+
+    # Guardamos la información del concurso en el diccionario creado
+    guardado_info(diccionario_concursos, contenido_general, info="concursos", ambito=ambito_buscado)
+
+    # Lista de paths posibles según el ámbito
+    if ambito_buscado == "nacional":
+        paths_botones = [ "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[20]/td[3]/a",
+                          "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a" ]
+    elif ambito_buscado == "internacional":
+        paths_botones = ["/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a",
+                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[21]/td[3]/a",
+                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[16]/td[3]/a",
+                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[19]/td[3]/a"]
+    else:
+        print(f"Ámbito '{ambito_buscado}' no reconocido.")
+        return
+
+    # Intentamos hacer clic en los paths en orden
+    clicked = False
+    for path in paths_botones:
+        try:
+            boton = buscador_elementos(driver, path)
+            boton.click()
+            clicked = True
+            break  # Si hace clic con éxito, salimos del bucle
+        except NoSuchElementException:
+            continue  # Si falla, probamos el siguiente
+
+    if not clicked:
+        print("No se pudo hacer clic en ninguno de los botones de pruebas.")
+
+        
+
+def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, lista_urls, es_primer_concurso = False):
+    
+    # Obtenemos la información del concurso que se encuentra en la tabla de las pruebas
+    path_info_restante = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td"
+                          
+    info_concurso_restante = buscador_elementos(driver, path_info_restante).text.split("\n")
+
+    if  es_primer_concurso == True:
+
+        # Creamos las nuevas claves que sacamos de la info que esta donde las pruebas
+        diccionario_concursos[info_concurso_restante[2].strip(":")] = []
+        diccionario_concursos[info_concurso_restante[4].strip(":")] = []
+        diccionario_concursos[info_concurso_restante[8].strip(":")] = []
+                
+    # metemos la info del concurso que nos falta
+    guardado_info(diccionario = diccionario_concursos, elementos = info_concurso_restante, claves = ["Inicio", "Final", "Ámbito"], indices = [3, 5, -1], info = "general")
+
+    # Obtenemos el nombre del concurso para luego meterlo en la tabla de pruebas
+    path_nombre_concurso = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[1]/div/table/tbody/tr/td[2]/table/tbody/tr"
+    nombre_concurso = buscador_elementos(driver, path_nombre_concurso).text.strip()
+
+    # Obtenemos las pruebas del concurso
+    path_pruebas = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[2]"
+    pruebas = buscador_elementos(driver, path_pruebas).text.split("\n")
+                
+    claves_pruebas = list(diccionario_pruebas.keys())
+    guardado_info(diccionario = diccionario_pruebas, elementos = pruebas, claves = claves_pruebas, indices = [6, 7, 8, 9, 10], step = 6, guardado = False, info = "general")
+
+    numero_pruebas = len(pruebas[6::6])  # Asumimos que 'Disciplina' tiene una fila por prueba
+    diccionario_pruebas["Concurso"].extend([nombre_concurso] * numero_pruebas)
+
+    # accedemos a los resultados de la primera prueba
+    path_resultados_pruebas = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[2]/div[2]/div/table/tbody/tr/td/div/div/table/tbody/tr[1]/td/div/div/table/tbody/tr[1]/td/div/div[3]/div/table/tbody/tr/td/a"
+    try:
+        buscador_elementos(driver, path_resultados_pruebas).click()
+        time.sleep(4)
+                
+        url = driver.current_url
+        lista_urls.append(url)
+        
+    except Exception as e:
+        print(f"Error al acceder a los resultados as {e}")

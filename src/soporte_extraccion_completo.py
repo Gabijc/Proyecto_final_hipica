@@ -1,94 +1,173 @@
 # Importamos las librerías necesarias
-import pandas as pd
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
-from src.soporte_extraccion_general import cambio_pestaña, buscador_elementos, guardado_info
+import os
+import json
+from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, resultados_disciplina, buscador_elementos, guardado_info, competiciones_año, obtencion_año, creacion_dictios_guardado, extraccion_info_concursos, extraccion_info_pruebas
 
-def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, contenido_general):
+def extraccion_completo_nac(url):
+    dictio_concursos_completo_nac, dictio_pruebas_completo_nac, dictio_jinetes_completo_nac, dictio_caballos_completo_nac = creacion_dictios_guardado()
+    urls_resultados_completo_nac = []
 
-    # Guardamos la información del concurso en el diccionario creado
-    guardado_info(diccionario_concursos, contenido_general, info="concursos", ambito=ambito_buscado)
+    driver = get_competiciones(url)
+    time.sleep(2)
 
-    # Lista de paths posibles según el ámbito
-    if ambito_buscado == "nacional":
-        paths_botones = [ "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[20]/td[3]/a",
-                          "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a" ]
-    elif ambito_buscado == "internacional":
-        paths_botones = ["/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a",
-                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[21]/td[3]/a",
-                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[16]/td[3]/a",
-                         "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[19]/td[3]/a"]
-    else:
-        print(f"Ámbito '{ambito_buscado}' no reconocido.")
-        return
+    # Seleccionamos el ambito de los concursos y la disciplina, en este caso nacional y completo
+    ambito_buscado, disciplina_buscada = resultados_disciplina(driver, disciplina = "completo")
+    cambio_pestaña(1,driver)
+    time.sleep(2)
 
-    # Intentamos hacer clic en los paths en orden
-    clicked = False
-    for path in paths_botones:
-        try:
-            boton = buscador_elementos(driver, path)
-            boton.click()
-            clicked = True
-            break  # Si hace clic con éxito, salimos del bucle
-        except NoSuchElementException:
-            continue  # Si falla, probamos el siguiente
+    año = obtencion_año(driver)
 
-    if not clicked:
-        print("No se pudo hacer clic en ninguno de los botones de pruebas.")
+    while año >= 2017:
 
+        # vamos a todos los concursos del año en el que estemos
+        competiciones_año(driver)
+
+        maximo_n_concursos = int(buscador_elementos(driver, "/html/body/form/div/div/div/ul/li[13]/font").text.split(" ")[-1].replace("(", "").replace(")", ""))
+        if año == 2025:
+            rango = range(5,21)
+        elif año < 2025:
+            rango = range(5, maximo_n_concursos + 5) 
+
+        for i in rango:
+
+            try:
+                concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/a")
+                print(concurso_bueno.text)
+                time.sleep(1)
+                try:
+                    concurso_bueno.click()
+                    cambio_pestaña(1, driver)
+                    time.sleep(2)
+                    contenido_general =  buscador_elementos(driver, "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table").text.split('\n')
+                                                                    
+                    if "Resultados: Ver resultados  Ver" not in contenido_general:
+                        driver.back()
+                        time.sleep(1)
+
+                    elif "Resultados: Ver resultados  Ver" in contenido_general:
+                        print(contenido_general)
+                        
+                        extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_completo_nac, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
+                        cambio_pestaña(2, driver)
+                        time.sleep(1)
+
+                        if i == 5 and año == 2025:
+                            extraccion_info_pruebas(driver, dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac, es_primer_concurso=True)
+                        else:
+                            extraccion_info_pruebas(driver, dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac)
+
+                        driver.close()
+                        cambio_pestaña(1, driver)
+                        driver.back()
+                        time.sleep(2)
+
+                except NoSuchElementException:
+                    raise NoSuchElementException
+
+            except NoSuchElementException:
+                concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
+                print(concurso_bueno)
+
+        with open(f"data/data_completo/concursos/concursos_completo_nac_{año}.json", "w", encoding="utf-8") as f:
+                json.dump(dictio_concursos_completo_nac, f, ensure_ascii=False, indent=4)
+
+        with open(f"data/data_completo/pruebas/pruebas_ccompleto_nac_{año}.json", "w", encoding="utf-8") as f:
+                json.dump(dictio_pruebas_completo_nac, f, ensure_ascii=False, indent=4)
+            
+        with open(f"data/data_completo/resultados/urls_resultados_completo_nac_{año}.json", "w", encoding="utf-8") as f:
+                json.dump(urls_resultados_completo_nac, f, ensure_ascii=False, indent=4) 
+
+        buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()        
+        año = obtencion_año(driver)
+
+    driver.quit()   
+
+def extraccion_completo_int(url):
+    dictio_concursos_completo_int, dictio_pruebas_completo_int, dictio_jinetes_completo_int, dictio_caballos_completo_int = creacion_dictios_guardado()
+    urls_resultados_completo_int = []
+
+    # inicializamos el driver y lo abrimos
+    driver = get_competiciones(url)
+    time.sleep(2)
+
+    # Seleccionamos el ambito de los concursos y la disciplina, en este caso nacional y completo
+    ambito_buscado, disciplina_buscada = resultados_disciplina(driver, ambito = "internacional", disciplina = "completo")
+    cambio_pestaña(1,driver)
+    time.sleep(2)
+
+    año = obtencion_año(driver)
+
+    while año >= 2024:
+
+        # Buscamos los concursos del año que nos aparece
+        competiciones_año(driver)
+
+        time.sleep(3)
+
+        maximo_n_concursos = int(buscador_elementos(driver, "/html/body/form/div/div/div/ul/li[13]/font").text.split(" ")[-1].replace("(", "").replace(")", ""))
+        if año == 2025:
+            rango = range(5,33)
+        elif año < 2025:
+            rango = range(5, maximo_n_concursos + 5) 
+
+        for i in rango:
+            
+            try:
+                concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/a")
+                print(concurso_bueno.text)
+                time.sleep(1)
+                try:
+                    concurso_bueno.click()
+                    cambio_pestaña(2, driver)
+                    time.sleep(2)
+                    contenido_general = buscador_elementos(driver, "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table").text.split('\n')
+                                                                    
+                    if "Resultados: Ver resultados  Ver" not in contenido_general:
+                        driver.close()
+                        cambio_pestaña(1, driver)
+                        time.sleep(1) 
+                    
+                    elif "Resultados: Ver resultados  Ver" in contenido_general:
+                        extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_completo_int, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
+                        cambio_pestaña(3,driver)
+                        if i == 5 and año == 2025:
+                            extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int, es_primer_concurso=True)
+                        else:
+                            extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int)
+                        driver.close()
+                        cambio_pestaña(2, driver)
+                        driver.close()
+                        cambio_pestaña(1, driver)
+                        time.sleep(2)
+
+                except NoSuchElementException:
+                    raise NoSuchElementException
+
+            except NoSuchElementException:
+                concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
+                print(concurso_bueno)
+
+        with open(f"data/data_completo/concursos_completo/concursos_completo_int_{año}.json", "w", encoding="utf-8") as f:
+                    json.dump(dictio_concursos_completo_int, f, ensure_ascii=False, indent=4)
+
+        with open(f"data/data_completo/pruebas_completo/pruebas_completo_int_{año}.json", "w", encoding="utf-8") as f:
+                    json.dump(dictio_pruebas_completo_int, f, ensure_ascii=False, indent=4)
+                
+        with open(f"data/data_completo/resultados_completo/urls_resultados_completo_int_{año}.json", "w", encoding="utf-8") as f:
+                    json.dump(urls_resultados_completo_int, f, ensure_ascii=False, indent=4)
         
-
-def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, lista_urls, es_primer_concurso = False):
-    
-    # Obtenemos la información del concurso que se encuentra en la tabla de las pruebas
-    path_info_restante = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td"
-                          
-    info_concurso_restante = buscador_elementos(driver, path_info_restante).text.split("\n")
-
-    if  es_primer_concurso == True:
-
-        # Creamos las nuevas claves que sacamos de la info que esta donde las pruebas
-        diccionario_concursos[info_concurso_restante[2].strip(":")] = []
-        diccionario_concursos[info_concurso_restante[4].strip(":")] = []
-        diccionario_concursos[info_concurso_restante[8].strip(":")] = []
-                
-    # metemos la info del concurso que nos falta
-    guardado_info(diccionario = diccionario_concursos, elementos = info_concurso_restante, claves = ["Inicio", "Final", "Ámbito"], indices = [3, 5, -1], info = "general")
-
-    # Obtenemos el nombre del concurso para luego meterlo en la tabla de pruebas
-    path_nombre_concurso = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[1]/div/table/tbody/tr/td[2]/table/tbody/tr"
-    nombre_concurso = buscador_elementos(driver, path_nombre_concurso).text.strip()
-
-    # Obtenemos las pruebas del concurso
-    path_pruebas = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[2]"
-    pruebas = buscador_elementos(driver, path_pruebas).text.split("\n")
-                
-    claves_pruebas = list(diccionario_pruebas.keys())
-    guardado_info(diccionario = diccionario_pruebas, elementos = pruebas, claves = claves_pruebas, indices = [6, 7, 8, 9, 10], step = 6, guardado = False, info = "general")
-
-    numero_pruebas = len(pruebas[6::6])  # Asumimos que 'Disciplina' tiene una fila por prueba
-    diccionario_pruebas["Concurso"].extend([nombre_concurso] * numero_pruebas)
-
-    # accedemos a los resultados de la primera prueba
-    path_resultados_pruebas = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[2]/div[2]/div/table/tbody/tr/td/div/div/table/tbody/tr[1]/td/div/div/table/tbody/tr[1]/td/div/div[3]/div/table/tbody/tr/td/a"
-    try:
-        buscador_elementos(driver, path_resultados_pruebas).click()
-        time.sleep(4)
-                
-        url = driver.current_url
-        lista_urls.append(url)
+        buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()
+        time.sleep(3)        
         
-    except Exception as e:
-        print(f"Error al acceder a los resultados as {e}")
+        año = obtencion_año(driver)
 
-
+    driver.quit()
 
 def extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes, diccionario_caballos):
 
@@ -162,3 +241,4 @@ def extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes, dicciona
         except Exception as e:
             print("Error en el bucle:", e)
             break
+

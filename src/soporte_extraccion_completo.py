@@ -10,6 +10,7 @@ import json
 from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, resultados_disciplina, buscador_elementos, guardado_info, competiciones_año, obtencion_año, creacion_dictios_guardado, extraccion_info_concursos, extraccion_info_pruebas, archivos
 
 def extraccion_completo_nac(url, lista_rutas):
+
     dictio_concursos_completo_nac, dictio_pruebas_completo_nac = creacion_dictios_guardado()
     urls_resultados_completo_nac = []
 
@@ -82,7 +83,7 @@ def extraccion_completo_nac(url, lista_rutas):
                  
             with open(f"{ruta}{nombres_archivos[i]}.json", "w", encoding="utf-8") as f:
                         json.dump(lista_archivos[i], f, ensure_ascii=False, indent=4) # se deja la ruta desde la que estoy ejecutando .py, no desde el src
-            i =+ 1
+            i += 1
 
         buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()        
         año = obtencion_año(driver)
@@ -90,7 +91,7 @@ def extraccion_completo_nac(url, lista_rutas):
     driver.quit()   
 
 def extraccion_completo_int(url, lista_rutas):
-    
+
     dictio_concursos_completo_int, dictio_pruebas_completo_int = creacion_dictios_guardado()
     urls_resultados_completo_int = []
 
@@ -163,15 +164,7 @@ def extraccion_completo_int(url, lista_rutas):
                  
             with open(f"{ruta}{nombres_archivos[i]}.json", "w", encoding="utf-8") as f:
                         json.dump(lista_archivos[i], f, ensure_ascii=False, indent=4) # se deja la ruta desde la que estoy ejecutando .py, no desde el src
-            i =+ 1
-        with open(f"data/data_completo/concursos_completo/concursos_completo_int_{año}.json", "w", encoding="utf-8") as f:
-                    json.dump(dictio_concursos_completo_int, f, ensure_ascii=False, indent=4)
-
-        with open(f"data/data_completo/pruebas_completo/pruebas_completo_int_{año}.json", "w", encoding="utf-8") as f:
-                    json.dump(dictio_pruebas_completo_int, f, ensure_ascii=False, indent=4)
-                
-        with open(f"data/data_completo/resultados_completo/urls_resultados_completo_int_{año}.json", "w", encoding="utf-8") as f:
-                    json.dump(urls_resultados_completo_int, f, ensure_ascii=False, indent=4)
+            i += 1
         
         buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()
         time.sleep(3)        

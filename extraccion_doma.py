@@ -18,6 +18,7 @@ if __name__ == "__main__":
     condicion = 1
 
     if condicion == 1: 
+        
         extraccion_doma_nac(url)
         extraccion_doma_int(url)
 

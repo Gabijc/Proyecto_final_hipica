@@ -8,10 +8,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 import os
 import json
 from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, resultados_disciplina, buscador_elementos, guardado_info, competiciones_año, obtencion_año, creacion_dictios_guardado, extraccion_info_concursos, extraccion_info_pruebas
+from src.soporte_extraccion_general import archivos
 
-def extraccion_doma_nac(url):
+def extraccion_doma_nac(url, lista_rutas):
 
-    dictio_concursos_doma_nac, dictio_pruebas_doma_nac, dictio_jinetes_doma_nac, dictio_caballos_doma_nac = creacion_dictios_guardado()
+    dictio_concursos_doma_nac, dictio_pruebas_doma_nac = creacion_dictios_guardado()
     urls_resultados_doma_nac = []
 
     driver = get_competiciones(url)
@@ -76,23 +77,24 @@ def extraccion_doma_nac(url):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
 
-        with open(f"data/data_doma/concursos/concursos_doma_nac_{año}.json", "w", encoding="utf-8") as f:
-            json.dump(dictio_concursos_doma_nac, f, ensure_ascii=False, indent=4)
+        lista_archivos = [dictio_concursos_doma_nac, dictio_pruebas_doma_nac, urls_resultados_doma_nac]
+        nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
-        with open(f"data/data_doma/pruebas/pruebas_doma_nac_{año}.json", "w", encoding="utf-8") as f:
-            json.dump(dictio_pruebas_doma_nac, f, ensure_ascii=False, indent=4)
-        
-        with open(f"data/data_doma/resultados/urls_resultados_doma_nac_{año}.json", "w", encoding="utf-8") as f:
-            json.dump(urls_resultados_doma_nac, f, ensure_ascii=False, indent=4)
+        i = 0
+        for ruta in lista_rutas:
+                 
+            with open(f"{ruta}{nombres_archivos[i]}.json", "w", encoding="utf-8") as f:
+                        json.dump(lista_archivos[i], f, ensure_ascii=False, indent=4) # se deja la ruta desde la que estoy ejecutando .py, no desde el src
+            i += 1
 
         buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()        
         año = obtencion_año(driver)
         
     driver.quit()
 
-def extraccion_doma_int(url):
+def extraccion_doma_int(url, lista_rutas):
 
-    dictio_concursos_doma_int, dictio_pruebas_doma_int, dictio_jinetes_doma_int, dictio_caballos_doma_int = creacion_dictios_guardado()
+    dictio_concursos_doma_int, dictio_pruebas_doma_int = creacion_dictios_guardado()
     urls_resultados_doma_int = []
 
     # inicializamos el driver y lo abrimos
@@ -156,14 +158,18 @@ def extraccion_doma_int(url):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
         
-        with open(f"data/data_doma/concursos/concursos_doma_int_{año}.json", "w", encoding="utf-8") as f:
-            json.dump(dictio_concursos_doma_int, f, ensure_ascii=False, indent=4)
+        lista_archivos = [dictio_concursos_doma_int, dictio_pruebas_doma_int, urls_resultados_doma_int]
+        nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
-        with open(f"data/data_doma/pruebas/pruebas_doma_int_{año}.json", "w", encoding="utf-8") as f:
-            json.dump(dictio_pruebas_doma_int, f, ensure_ascii=False, indent=4)
-        
-        with open(f"data/data_doma/resultados/urls_resultados_doma_int_{año}.json", "w", encoding="utf-8") as f:
-            json.dump(urls_resultados_doma_int, f, ensure_ascii=False, indent=4)
+        i = 0
+        for ruta in lista_rutas:
+                 
+            with open(f"{ruta}{nombres_archivos[i]}.json", "w", encoding="utf-8") as f:
+                        json.dump(lista_archivos[i], f, ensure_ascii=False, indent=4) # se deja la ruta desde la que estoy ejecutando .py, no desde el src
+            i += 1
+
+        buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()        
+        año = obtencion_año(driver)
         
         buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()
         time.sleep(3)        

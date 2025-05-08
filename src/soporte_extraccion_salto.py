@@ -9,7 +9,7 @@ import os
 import json
 from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, resultados_disciplina, buscador_elementos, guardado_info, competiciones_año, obtencion_año, creacion_dictios_guardado, extraccion_info_concursos, extraccion_info_pruebas
 
-def extraccion_salto_nac(url):
+def extraccion_salto_nac(url, path): # diferentes path oara cada coso
     dictio_concursos_salto_nac, dictio_pruebas_salto_nac, dictio_jinetes_salto_nac, dictio_caballos_salto_nac = creacion_dictios_guardado()
     urls_resultados_salto_nac = []
 

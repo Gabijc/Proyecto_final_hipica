@@ -1,5 +1,4 @@
 from src.soporte_extraccion_salto import extraccion_salto_nac, extraccion_salto_int, extraccion_resultados_jinetes_caballos
-from src.soporte_extraccion_general import creacion_dictios_guardado, get_competiciones
 import os 
 from dotenv import load_dotenv
 

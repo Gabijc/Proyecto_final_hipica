@@ -19,7 +19,7 @@ if __name__ == "__main__":
     if condicion == 1:
 
         extraccion_salto_nac(url, lista_rutas = rutas)
-        extraccion_salto_int(url)
+        extraccion_salto_int(url, lista_rutas = rutas)
 
     elif condicion == 2:
         # me hace la extracicon de los excels

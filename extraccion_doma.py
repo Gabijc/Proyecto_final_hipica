@@ -18,8 +18,8 @@ if __name__ == "__main__":
 
     if condicion == 1: 
         
-        extraccion_doma_nac(url)
-        extraccion_doma_int(url)
+        extraccion_doma_nac(url, lista_rutas = rutas)
+        extraccion_doma_int(url, lista_rutas = rutas)
 
     elif condicion == 2:
         # me hace la extracicon de los excels

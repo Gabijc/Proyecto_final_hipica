@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
     if condicion == 1:
 
-        extraccion_completo_nac(url)
-        extraccion_completo_int(url)
+        extraccion_completo_nac(url, lista_rutas = rutas)
+        extraccion_completo_int(url, lista_rutas = rutas)
 
     elif condicion == 2:
         # me hace la extracicon de los excels

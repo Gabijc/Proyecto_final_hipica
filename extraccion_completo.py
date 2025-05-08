@@ -32,6 +32,5 @@ if __name__ == "__main__":
         # me lanza todo
         extraccion_completo_nac(url)
         extraccion_completo_int(url)
-        driver = get_competiciones(url) 
-        dictio_jinetes, dictio_caballos = creacion_dictios_guardado(creacion = False)
-        extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes = dictio_jinetes, diccionario_caballos = dictio_caballos)
+        extraccion_resultados_jinetes_caballos(lista_urls)
+        

@@ -31,41 +31,44 @@ def get_competiciones(url):
     driver.get(url)
     return driver
 
-def creacion_dictios_guardado():
-
-    dictio_concursos = {'Nombre': [],
-                        'Categoría': [],
-                        'Provincia': [],
-                        'Localidad': [],
-                        'Disciplina': [],
-                        'Federación': [],
-                        'Resultados': [],
-                        'País': []}
-    
-    dictio_pruebas = {'Disciplina': [],
-                            'Fecha': [],
-                            'Prueba': [],
+def creacion_dictios_guardado(creacion = True):
+    if creacion == True:
+        dictio_concursos = {'Nombre': [],
                             'Categoría': [],
-                            'Número': [],
-                            'Concurso': []}
+                            'Provincia': [],
+                            'Localidad': [],
+                            'Disciplina': [],
+                            'Federación': [],
+                            'Resultados': [],
+                            'País': []}
+        
+        dictio_pruebas = {'Disciplina': [],
+                                'Fecha': [],
+                                'Prueba': [],
+                                'Categoría': [],
+                                'Número': [],
+                                'Concurso': []}
+        
+        return dictio_concursos, dictio_pruebas
     
-    dictio_jinetes = { "Nombre": [],
-                       "Licencia": [],
-                       "Sexo": [],
-                       "País": [],
-                       "Federación": [],
-                       "Disciplina": []}
-    
-    dictio_caballos = {"Nombre": [],
+    elif creacion == False: 
+        dictio_jinetes = { "Nombre": [],
                         "Licencia": [],
-                        "Edad": [],
-                        "País": [],
-                        "Raza": [],
                         "Sexo": [],
+                        "País": [],
                         "Federación": [],
                         "Disciplina": []}
-    
-    return dictio_concursos, dictio_pruebas, dictio_jinetes, dictio_caballos
+        
+        dictio_caballos = {"Nombre": [],
+                            "Licencia": [],
+                            "Edad": [],
+                            "País": [],
+                            "Raza": [],
+                            "Sexo": [],
+                            "Federación": [],
+                            "Disciplina": []}
+        
+        return dictio_jinetes, dictio_caballos
 
 
 # definimos la función que nos permitirá movernos por las pestañas que se van abriendo según navegamos por la página

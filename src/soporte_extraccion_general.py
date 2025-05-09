@@ -83,12 +83,16 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
             try:
                 driver = get_competiciones(url, ruta_carpeta_guardado=download_dir)  # Inicializamos el driver con la URL de los resultados 
 
-                time.sleep(2)
+                time.sleep(4)
+
                 while True:
                     try:
                         tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text  # Buscamos el tipo de prueba
+                        time.sleep(0.5)
                         fecha_prueba = buscador_elementos(driver, path_fecha_prueba).text  # Buscamos la fecha de la prueba
+                        time.sleep(0.5)
                         concurso = buscador_elementos(driver, path_concurso).text
+                        time.sleep(0.5)
 
                         # Realizamos las modificaciones necesarias en los nombres
                         tipo_prueba = tipo_prueba.replace('*', 'estrellas')
@@ -101,10 +105,10 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
                         tipo_prueba = tipo_prueba.replace('>', '')
                         tipo_prueba = tipo_prueba.replace('|', '-')
 
-                        print(tipo_prueba, fecha_prueba, concurso)
+                        print(f"Tipo prueba: '{tipo_prueba}', Fecha prueba: '{fecha_prueba}', Concurso: '{concurso}'")
                         buscador_elementos(driver, path_enlace_descarga_excel).click()  # Hacemos clic en el enlace de descarga del archivo Excel
 
-                        time.sleep(5)
+                        time.sleep(8)
 
                         # Renombramos el archivo
                         list_of_files = glob.glob(os.path.join(download_dir, '*.xls'))  # Lista de archivos .xls en la carpeta de descargas
@@ -114,12 +118,12 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
                             latest_file = max(list_of_files, key=os.path.getctime)  # Archivo más reciente
                             base = os.path.basename(latest_file)  # Nombre del archivo sin la ruta
                             nombre, ext = os.path.splitext(base)  # Separamos el nombre y la extensión
-                            nuevo_nombre = f"{nombre}_{tipo_prueba}{ext}"  # Nuevo nombre del archivo
+                            nuevo_nombre = f"{nombre}_{tipo_prueba}_{fecha_prueba}{ext}"  # Nuevo nombre del archivo
                             nuevo_path = os.path.join(download_dir, nuevo_nombre)  # Ruta completa con el nuevo nombre
 
                             contador = 1
                             while os.path.exists(nuevo_path):  # Si el archivo ya existe, le agregamos un contador
-                                nuevo_nombre = f"{nombre}_{tipo_prueba}{fecha_prueba}_{contador}{ext}"
+                                nuevo_nombre = f"{nombre}_{tipo_prueba}_{fecha_prueba}_{contador}{ext}"
                                 nuevo_path = os.path.join(download_dir, nuevo_nombre)
                                 contador += 1
 

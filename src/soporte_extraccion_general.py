@@ -29,20 +29,23 @@ def get_competiciones(url, coso = False):
     """
     if coso == False:
         driver = webdriver.Chrome()
-        driver.get(url)
 
-    if coso == True:
+    elif coso == True:
 
-        chrome_options = Options()
+        chrome_options = webdriver.ChromeOptions()
+        download_dir = os.path.abspath("data/data_completo/resultados")
+        os.makedirs(download_dir, exist_ok=True)
 
-        chrome_options.add_experimental_option("prefs", {
-                                               "download.default_directory": "data/data_completo/resultados",
-                                               "download.prompt_for_download": False,
-                                               "download.directory_upgrade": True,
-                                               "safebrowse.safebrowser.user_enabled": True })
+        prefs = {
+                "download.default_directory": download_dir,
+                "download.prompt_for_download": False,
+                "directory_upgrade": True,
+                "safebrowsing.enabled": True
+            }
+        chrome_options.add_experimental_option("prefs", prefs)
         driver = webdriver.Chrome(options=chrome_options)
-        driver.get(url)
-
+    
+    driver.get(url)
     return driver
 
 def descarga_excels(driver):

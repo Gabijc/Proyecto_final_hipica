@@ -54,7 +54,8 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
     path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
     path_fecha_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[1]/div/table/tbody/tr/td[2]/table/tbody/tr/td/time"
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
-
+    path_concurso = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[5]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
+    
     siguiente_prueba_1 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[3]/div[6]/div/table/tbody/tr/td/a" # completo 
     siguiente_prueba_2 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[2]/div[6]/div/table/tbody/tr/td/a" # salto y doma  
 
@@ -89,10 +90,20 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
                     try:
                         tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
                         fecha_prueba = buscador_elementos(driver, path_fecha_prueba).text # buscamos el tipo de prueba en la que estamos
+                        concurso = buscador_elementos(driver, path_concurso).text
+
                         tipo_prueba = tipo_prueba.replace('*', 'estrellas')
                         tipo_prueba = tipo_prueba.replace('/', '-')
                         fecha_prueba = fecha_prueba.replace('/', '-')
-                        print(tipo_prueba, fecha_prueba)
+                        tipo_prueba = tipo_prueba.replace('\\', '-')
+                        tipo_prueba = tipo_prueba.replace(':', '-')
+                        tipo_prueba = tipo_prueba.replace('?', '')
+                        tipo_prueba = tipo_prueba.replace('"', '')
+                        tipo_prueba = tipo_prueba.replace('<', '')
+                        tipo_prueba = tipo_prueba.replace('>', '')
+                        tipo_prueba = tipo_prueba.replace('|', '-')
+                        
+                        print(tipo_prueba, fecha_prueba, concurso)
                         buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
 
                         time.sleep(5)

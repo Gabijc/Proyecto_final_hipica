@@ -45,7 +45,7 @@ def get_competiciones(url, ruta_carpeta_guardado):
     driver.get(url)
     return driver
 
-def descarga_excels(lista_urls, ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "salto"):
+def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "salto"):
 
     if disciplina == "salto":
         i = 5
@@ -58,7 +58,7 @@ def descarga_excels(lista_urls, ruta_carpeta_guardado, ruta_carpeta_lectura, dis
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
                                   
     read_dir = os.path.abspath(ruta_carpeta_lectura)
-    
+
     # creamos la lista de urls a partir de la lista que tenemos en el archivo .json
     with open(read_dir, 'r') as file:
             lista_urls = json.load(file)
@@ -78,6 +78,7 @@ def descarga_excels(lista_urls, ruta_carpeta_guardado, ruta_carpeta_lectura, dis
         # renombramos el archivo
         download_dir = os.path.abspath(ruta_carpeta_guardado) # convertimos la ruta pasada a una ruta absoluta del sistema operativo, para asegurarnos que se busque de manera correcta
         list_of_files = glob.glob(os.path.join(download_dir, '*.xls')) # se crea una lista con los archivos .xls dentro de la carpeta de donde se descarga el archivo
+        
         if list_of_files:
             # en caso de que haya archivos de tipo excel, continuará
             latest_file = max(list_of_files, key=os.path.getctime) # buscamos el archivo con fecha de creacion/modificacion más reciente, siendo este el ultimo añadido a la carpeta
@@ -87,6 +88,7 @@ def descarga_excels(lista_urls, ruta_carpeta_guardado, ruta_carpeta_lectura, dis
             nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
             os.rename(latest_file, nuevo_path) # se renombra el archivo
             print(f"Archivo renombrado a: {nuevo_nombre}")
+
         driver.quit()
 
 def creacion_dictios_guardado(creacion = True):

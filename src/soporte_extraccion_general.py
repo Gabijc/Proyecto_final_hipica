@@ -31,7 +31,6 @@ def get_competiciones(url, ruta_carpeta_guardado):
     os.makedirs(download_dir, exist_ok=True)
 
     chrome_options = Options()
-    chrome_options.add_argument("--incognito")
     prefs = { "download.default_directory": download_dir,
               "download.prompt_for_download": False,
               "directory_upgrade": True,
@@ -76,6 +75,7 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
                 time.sleep(2)
 
                 tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
+                print(tipo_prueba)
                 buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
 
                 time.sleep(5)
@@ -90,6 +90,13 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
                     nombre, ext = os.path.splitext(base) # separamos el nombre de la extensión
                     nuevo_nombre = f"{nombre}_{tipo_prueba}{ext}"# definimos el nuevo nombre, que se compondrá por el nombre original del archivo, el tipo de prueba en la que estemos, y la extensión
                     nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
+                    
+                    contador = 1
+                    while os.path.exists(nuevo_path):
+                        nuevo_nombre = f"{nombre}_{tipo_prueba}_{contador}{ext}"
+                        nuevo_path = os.path.join(download_dir, nuevo_nombre)
+                        contador += 1
+
                     os.rename(latest_file, nuevo_path) # se renombra el archivo
                     print(f"Archivo renombrado a: {nuevo_nombre}")
             finally:

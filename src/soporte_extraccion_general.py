@@ -13,10 +13,8 @@ import os
 from selenium.webdriver.chrome.options import Options
 import glob
 import json
-from seleniumbase import Driver
+# from seleniumbase import Driver
 
-
-"data/data_completo/resultados"
 
 def get_competiciones(url, ruta_carpeta_guardado):
     """
@@ -29,18 +27,18 @@ def get_competiciones(url, ruta_carpeta_guardado):
         Webdriver.Chrome: Instancia del navegador abierto en la URL proporcionada.
     """
 
-    chrome_options = Options()
     download_dir = os.path.abspath(ruta_carpeta_guardado)
     os.makedirs(download_dir, exist_ok=True)
 
+    chrome_options = Options()
+    chrome_options.add_argument("--incognito")
     prefs = { "download.default_directory": download_dir,
               "download.prompt_for_download": False,
               "directory_upgrade": True,
               "safebrowsing.enabled": True }
-    
-    
+
     chrome_options.add_experimental_option("prefs", prefs)
-    driver = Driver(uc=True, incognito=True, chrome_options=chrome_options) # usamos el driver de seleniumbase en vez del de selnium normal para navegar de forma privada entre otras cosas
+    driver = webdriver.Chrome(options = chrome_options) 
     
     driver.get(url)
     return driver
@@ -54,7 +52,7 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
     elif disciplina == "completo":
         i = 3
     
-    path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
+    path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
                                   
     read_dir = os.path.abspath(ruta_carpeta_lectura)
@@ -78,7 +76,7 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
                 time.sleep(2)
 
                 tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
-                excel = buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
+                buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
 
                 time.sleep(5)
 

@@ -17,7 +17,7 @@ from selenium.webdriver.chrome.options import Options
     #def __init__(self, ):
 
 
-def get_competiciones(url):
+def get_competiciones(url, coso = False):
     """
     Función que abre una nueva ventana de Chrome en la URL indicada y devuelve el driver.
 
@@ -27,9 +27,30 @@ def get_competiciones(url):
     Returns:
         Webdriver.Chrome: Instancia del navegador abierto en la URL proporcionada.
     """
-    driver = webdriver.Chrome()
-    driver.get(url)
+    if coso == False:
+        driver = webdriver.Chrome()
+        driver.get(url)
+
+    if coso == True:
+
+        chrome_options = Options()
+
+        chrome_options.add_experimental_option("prefs", {
+                                               "download.default_directory": "data/data_completo/resultados",
+                                               "download.prompt_for_download": False,
+                                               "download.directory_upgrade": True,
+                                               "safebrowse.safebrowser.user_enabled": True })
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(url)
+
     return driver
+
+def descarga_excels(driver):
+    excel = buscador_elementos(driver, "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a")
+    excel.click()
+
+    time.sleep()
+    driver.quit()
 
 def creacion_dictios_guardado(creacion = True):
     if creacion == True:

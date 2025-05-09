@@ -58,38 +58,44 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
                                   
     read_dir = os.path.abspath(ruta_carpeta_lectura)
+    download_dir = os.path.abspath(ruta_carpeta_guardado)
 
-    # creamos la lista de urls a partir de la lista que tenemos en el archivo .json
-    with open(read_dir, 'r') as file:
-            lista_urls = json.load(file)
+    json_files = glob.glob(os.path.join(read_dir, "*.json"))
 
-    for url in lista_urls:
+    if not json_files:
+        raise FileNotFoundError(f"No se encontró ningún archivo .json en {read_dir}")
+                                
+    for json_path in json_files:
+    
+        # creamos la lista de urls a partir de la lista que tenemos en el archivo .json
+        with open(read_dir, 'r') as file:
+                lista_urls = json.load(file)
 
-        driver = get_competiciones(url) # inicializamos el driver con la url de los resultados 
+        for url in lista_urls:
+            try:
+                driver = get_competiciones(url) # inicializamos el driver con la url de los resultados 
 
-        time.sleep(2)
+                time.sleep(2)
 
-        tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
-        excel = buscador_elementos(driver, path_enlace_descarga_excel)
-        excel.click() # hacemos click en el enlace de descarga del archivo excel
+                tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
+                excel = buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
 
-        time.sleep(5)
+                time.sleep(5)
 
-        # renombramos el archivo
-        download_dir = os.path.abspath(ruta_carpeta_guardado) # convertimos la ruta pasada a una ruta absoluta del sistema operativo, para asegurarnos que se busque de manera correcta
-        list_of_files = glob.glob(os.path.join(download_dir, '*.xls')) # se crea una lista con los archivos .xls dentro de la carpeta de donde se descarga el archivo
-        
-        if list_of_files:
-            # en caso de que haya archivos de tipo excel, continuará
-            latest_file = max(list_of_files, key=os.path.getctime) # buscamos el archivo con fecha de creacion/modificacion más reciente, siendo este el ultimo añadido a la carpeta
-            base = os.path.basename(latest_file) # obtenemos el nombre del archivo, sin la ruta
-            nombre, ext = os.path.splitext(base) # separamos el nombre de la extensión
-            nuevo_nombre = f"{nombre}{tipo_prueba}{ext}"# definimos el nuevo nombre, que se compondrá por el nombre original del archivo, el tipo de prueba en la que estemos, y la extensión
-            nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
-            os.rename(latest_file, nuevo_path) # se renombra el archivo
-            print(f"Archivo renombrado a: {nuevo_nombre}")
-
-        driver.quit()
+                # renombramos el archivo
+                list_of_files = glob.glob(os.path.join(download_dir, '*.xls')) # se crea una lista con los archivos .xls dentro de la carpeta de donde se descarga el archivo
+                    
+                if list_of_files:
+                    # en caso de que haya archivos de tipo excel, continuará
+                    latest_file = max(list_of_files, key=os.path.getctime) # buscamos el archivo con fecha de creacion/modificacion más reciente, siendo este el ultimo añadido a la carpeta
+                    base = os.path.basename(latest_file) # obtenemos el nombre del archivo, sin la ruta
+                    nombre, ext = os.path.splitext(base) # separamos el nombre de la extensión
+                    nuevo_nombre = f"{nombre}_{tipo_prueba}{ext}"# definimos el nuevo nombre, que se compondrá por el nombre original del archivo, el tipo de prueba en la que estemos, y la extensión
+                    nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
+                    os.rename(latest_file, nuevo_path) # se renombra el archivo
+                    print(f"Archivo renombrado a: {nuevo_nombre}")
+            finally:
+                driver.quit()
 
 def creacion_dictios_guardado(creacion = True):
     if creacion == True:

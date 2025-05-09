@@ -13,15 +13,11 @@ import os
 from selenium.webdriver.chrome.options import Options
 import glob
 import json
-# from seleniumbase import Driver
-# import time
-# driver = Driver(uc=True, incognito=True) 
-# driver.get(url)
-#class Scrapeo:
-    # creamos el constructor
-    #def __init__(self, ):
+from seleniumbase import Driver
+
+
 "data/data_completo/resultados"
-# poner seleniumbase en el driver
+
 def get_competiciones(url, ruta_carpeta_guardado):
     """
     Función que abre una nueva ventana de Chrome en la URL indicada y devuelve el driver.
@@ -32,7 +28,8 @@ def get_competiciones(url, ruta_carpeta_guardado):
     Returns:
         Webdriver.Chrome: Instancia del navegador abierto en la URL proporcionada.
     """
-    chrome_options = webdriver.ChromeOptions()
+
+    chrome_options = Options()
     download_dir = os.path.abspath(ruta_carpeta_guardado)
     os.makedirs(download_dir, exist_ok=True)
 
@@ -41,8 +38,9 @@ def get_competiciones(url, ruta_carpeta_guardado):
               "directory_upgrade": True,
               "safebrowsing.enabled": True }
     
+    
     chrome_options.add_experimental_option("prefs", prefs)
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = Driver(uc=True, incognito=True, options=chrome_options) # usamos el driver de seleniumbase en vez del de selnium normal para navegar de forma privada entre otras cosas
     
     driver.get(url)
     return driver

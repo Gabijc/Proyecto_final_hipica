@@ -53,12 +53,13 @@ def descarga_excels(lista_urls, ruta_carpeta_guardado, ruta_carpeta_lectura, dis
         i = 4
     elif disciplina == "completo":
         i = 3
-    # definimos 
+    
     path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
                                   
     read_dir = os.path.abspath(ruta_carpeta_lectura)
-
+    
+    # creamos la lista de urls a partir de la lista que tenemos en el archivo .json
     with open(read_dir, 'r') as file:
             lista_urls = json.load(file)
 

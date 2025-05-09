@@ -141,8 +141,10 @@ def extraccion_completo_int(url, lista_rutas):
                         cambio_pestaña(3,driver)
                         if i == 5 and año == 2025:
                             extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int, es_primer_concurso=True)
+                            # descarga_excel
                         else:
                             extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int)
+                            # descarga_excel
                         driver.close()
                         cambio_pestaña(2, driver)
                         driver.close()

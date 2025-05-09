@@ -2,31 +2,66 @@ CREATE TABLE disciplinas(
 	id_disciplina SERIAL PRIMARY KEY,
 	disciplina VARCHAR(50)
 );
-CREATE TABLE fechas(
-	id_fecha SERIAL PRIMARY KEY,
-	fecha DATE
-);
 CREATE TABLE caballos(
     id_caballo VARCHAR(50) PRIMARY KEY, -- Es la licencia del caballo
-    nombre_caballo VARCHAR(50),
+    nombre VARCHAR(50),
     sexo VARCHAR(50),
     edad INT,
     raza VARCHAR(50),
     nacionalidad VARCHAR(50),
     federacion VARCHAR(50),
-    id_disciplina INT REFERENCES disciplinas(id_disciplina) -- duda de si poner el ON DELETE CASCADE 
+    id_resultado INT REFERENCES resultados(id_resultado) -- duda de si poner el ON DELETE CASCADE 
 );
 CREATE TABLE jinetes(
-	id_jinete VARCHAR(50) PRIMARY KEY, -- Es la licencia del jinete
-    nombre_caballo VARCHAR(50),
+	id_jinete VARCHAR(50) PRIMARY KEY, 
+    nombre VARCHAR(50),
     sexo VARCHAR(50),
     nacionalidad VARCHAR(50),
     federacion VARCHAR(50),
-    id_disciplina INT REFERENCES disicplinas(id_disciplina)
+    id_resultado INT REFERENCES resultados(id_resultado) -- duda de si poner el ON DELETE CASCADE
+);
+CREATE TABLE pruebas(
+    id_prueba SERIAL PRIMARY KEY,
+    prueba VARCHAR(50),
+    categoría VARCHAR (50),
+    ámbito VARCHAR(50),
+    fecha DATE
+    id_disciplina INT REFERENCES disciplinas(id_disciplina)
+);
+CREATE TABLE concursos(
+    id_concurso SERIAL PRIMARY KEY,
+    nombre VARCHAR(50),
+    categoría VARCHAR(50),
+    pais VARCHAR(50),
+    provinicia VARCHAR(50),
+    localidad VARCHAR(50),
+    ámbito VARCHAR(50),
+    federacion VARCHAR(50),
+);
+CREATE TABLE resultados(
+    id_resultado SERIAL PRIMARY KEY,
+    puesto INT,
+    estado VARCHAR(50),
+    premio BOOLEAN, -- duda si tiene sentido, tipo true es que tiene premio y false que no tiene
+    dinero_premio INT,
+    id_jinete VARCHAR(50) REFERENCES jinetes(id_jinete)
+    id_caballo VARCHAR(50) REFERENCES jinetes(id_caballo)
+    id_prueba INT REFERENCES pruebas(id_prueba)
+    id_concurso INT REFERENCES concursos(id_concurso)
+)
+CREATE TABLE resultados_doma(
+	id_resultado INT REFERENCES resultados(id_resultado) -- duda de si poner el ON DELETE CASCADE
+    id_prueba INT REFERENCES resultados(id_prueba) -- duda de si poner el ON DELETE CASCADE
+    nota_juez_E INT,
+    nota_juez_H INT,
+    nota_juez_C INT,
+    nota_juez_B INT,
+    nota_juez_M INT,
+    nota INT	
 );
 CREATE TABLE resultados_completo(
-	id_resultado SERIAL PRIMARY KEY,
-    puesto INT,
+	id_resultado INT REFERENCES resultados(id_resultado) -- duda de si poner el ON DELETE CASCADE
+    id_prueba INT REFERENCES resultados(id_prueba) -- duda de si poner el ON DELETE CASCADE
     mer VARCHAR(50),
     puntos_doma INT,
     tiempo_obs_cross INT,
@@ -48,53 +83,4 @@ CREATE TABLE resultados_salto(
     estado VARCHAR(50),
     dinero_premio INT,
     disciplina_id INT REFERENCES disciplinas(id_disciplina) 	
-);
-CREATE TABLE resultados_doma(
-	id_resultado SERIAL PRIMARY KEY,
-    puesto INT,
-    nota_juez_E INT,
-    nota_juez_H INT,
-    nota_juez_C INT,
-    nota_juez_B INT,
-    nota_juez_M INT,
-    nota INT,
-    estado VARCHAR(50),
-    dinero_premio INT,
-    disciplina_id INT REFERENCES disciplinas(id_disciplina) 	
-);
-CREATE TABLE pruebas_completo(
-    id_prueba SERIAL PRIMARY KEY,
-    prueba VARCHAR(50),
-    categoría VARCHAR (50),
-    ámbito VARCHAR(50),
-    id_fecha INT REFERENCES fechas(id_fecha),
-    id_resultado INT REFERENCES resultados_completo(id_resultado)
-);
-CREATE TABLE pruebas_salto(
-    id_prueba SERIAL PRIMARY KEY,
-    prueba VARCHAR(50),
-    categoría VARCHAR (50),
-    altura_obstaculos FLOAT, -- duda de si poner, depende de si consigo sacarlo en el scrapeo
-    ámbito VARCHAR(50),
-    id_fecha INT REFERENCES fechas(id_fecha),
-    id_resultado INT REFERENCES resultados_salto(id_resultado)
-);
-CREATE TABLE pruebas_doma(
-    id_prueba SERIAL PRIMARY KEY,
-    prueba VARCHAR(50),
-    categoría VARCHAR (50),
-    ámbito VARCHAR(50),
-    id_fecha INT REFERENCES fechas(id_fecha),
-    id_resultado INT REFERENCES resultados_doma(id_resultado)
-);
-CREATE TABLE concursos(
-    id_concurso SERIAL PRIMARY KEY,
-    nombre VARCHAR(50),
-    categoría VARCHAR(50),
-    pais VARCHAR(50),
-    provinicia VARCHAR(50),
-    localidad VARCHAR(50),
-    ámbito VARCHAR(50),
-    federacion VARCHAR(50),
-    id_fecha INT REFERENCES fechas(id_fecha)
 );

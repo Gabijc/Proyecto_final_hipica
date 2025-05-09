@@ -53,52 +53,99 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
     
     path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
-                                  
+
+    siguiente_prueba_1 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[3]/div[6]/div/table/tbody/tr/td/a" # completo 
+    siguiente_prueba_2 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[2]/div[6]/div/table/tbody/tr/td/a" # salto y doma  
+
     read_dir = os.path.abspath(ruta_carpeta_lectura)
     download_dir = os.path.abspath(ruta_carpeta_guardado)
 
+    lista_jsons_extraidos = []
     json_files = glob.glob(os.path.join(read_dir, "*.json"))
 
     if not json_files:
         raise FileNotFoundError(f"No se encontró ningún archivo .json en {read_dir}")
-                                
+
+                          
     for json_path in json_files:
-    
+        
+        if json_files in lista_jsons_extraidos:
+            print(f"El archivo {json_path} ya ha sido procesado, saltando.")
+            continue  # Saltamos este archivo
+
         # creamos la lista de urls a partir de la lista que tenemos en el archivo .json
         with open(json_path, 'r', encoding='utf-8') as file:
                 lista_urls = json.load(file)
+
+        
 
         for url in lista_urls:
             try:
                 driver = get_competiciones(url, ruta_carpeta_guardado = download_dir) # inicializamos el driver con la url de los resultados 
 
                 time.sleep(2)
+                while True:
+                    try:
+                        tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
+                        print(tipo_prueba)
+                        buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
 
-                tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
-                print(tipo_prueba)
-                buscador_elementos(driver, path_enlace_descarga_excel).click() # hacemos click en el enlace de descarga del archivo excel
+                        time.sleep(5)
 
-                time.sleep(5)
+                        # renombramos el archivo
+                        list_of_files = glob.glob(os.path.join(download_dir, '*.xls')) # se crea una lista con los archivos .xls dentro de la carpeta de donde se descarga el archivo
+                            
+                        if list_of_files:
+                            # en caso de que haya archivos de tipo excel, continuará
+                            latest_file = max(list_of_files, key=os.path.getctime) # buscamos el archivo con fecha de creacion/modificacion más reciente, siendo este el ultimo añadido a la carpeta
+                            base = os.path.basename(latest_file) # obtenemos el nombre del archivo, sin la ruta
+                            nombre, ext = os.path.splitext(base) # separamos el nombre de la extensión
+                            nuevo_nombre = f"{nombre}_{tipo_prueba}{ext}"# definimos el nuevo nombre, que se compondrá por el nombre original del archivo, el tipo de prueba en la que estemos, y la extensión
+                            nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
+                            
+                            contador = 1
+                            while os.path.exists(nuevo_path):
+                                nuevo_nombre = f"{nombre}_{tipo_prueba}_{contador}{ext}"
+                                nuevo_path = os.path.join(download_dir, nuevo_nombre)
+                                contador += 1
 
-                # renombramos el archivo
-                list_of_files = glob.glob(os.path.join(download_dir, '*.xls')) # se crea una lista con los archivos .xls dentro de la carpeta de donde se descarga el archivo
+                            os.rename(latest_file, nuevo_path) # se renombra el archivo
+                            print(f"Archivo renombrado a: {nuevo_nombre}")
+                            
+                        try:
+                            buscador_elementos(driver, siguiente_prueba_1).click()
+                        except NoSuchElementException:
+                            buscador_elementos(driver, siguiente_prueba_2).click()
+
+                        time.sleep(5)
+
+                        try:
+                            WebDriverWait(driver, 5).until (EC.alert_is_present())
+                            # switch_to.alert for switching to alert and accept
+                            alert = driver.switch_to.alert
+                            print("alert Exists in page")
+                            alert.accept()            
+                            break
+                        
+                        except TimeoutException:   
+                            print("alert does not Exist in page")
+                            
+                    except Exception as e:
+                        print("Error en el bucle:", e)
+                        break
+
+                # Agregamos el archivo procesado a la lista
+                lista_jsons_extraidos.append(json_path)
+                print(f"Archivo {json_path} procesado y agregado a la lista.")
                     
-                if list_of_files:
-                    # en caso de que haya archivos de tipo excel, continuará
-                    latest_file = max(list_of_files, key=os.path.getctime) # buscamos el archivo con fecha de creacion/modificacion más reciente, siendo este el ultimo añadido a la carpeta
-                    base = os.path.basename(latest_file) # obtenemos el nombre del archivo, sin la ruta
-                    nombre, ext = os.path.splitext(base) # separamos el nombre de la extensión
-                    nuevo_nombre = f"{nombre}_{tipo_prueba}{ext}"# definimos el nuevo nombre, que se compondrá por el nombre original del archivo, el tipo de prueba en la que estemos, y la extensión
-                    nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
-                    
-                    contador = 1
-                    while os.path.exists(nuevo_path):
-                        nuevo_nombre = f"{nombre}_{tipo_prueba}_{contador}{ext}"
-                        nuevo_path = os.path.join(download_dir, nuevo_nombre)
-                        contador += 1
+                # Al finalizar, podemos ver la lista de archivos procesados:
+                print(f"Archivos procesados: {lista_jsons_extraidos}")    
 
-                    os.rename(latest_file, nuevo_path) # se renombra el archivo
-                    print(f"Archivo renombrado a: {nuevo_nombre}")
+                # Si todos los archivos han sido procesados, terminamos el bucle
+                if len(lista_jsons_extraidos) == len(json_files):
+                    print("Todos los archivos JSON han sido procesados. Terminando el bucle.")
+                    break  # Salimos del bucle
+
             finally:
                 driver.quit()
 

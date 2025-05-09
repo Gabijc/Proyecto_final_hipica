@@ -49,7 +49,7 @@ def descarga_excels(driver):
     excel = buscador_elementos(driver, "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a")
     excel.click()
 
-    time.sleep()
+    time.sleep(3)
     driver.quit()
 
 def creacion_dictios_guardado(creacion = True):

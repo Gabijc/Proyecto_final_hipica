@@ -11,13 +11,14 @@ from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPr
 from selenium.webdriver.support.ui import WebDriverWait
 import os
 from selenium.webdriver.chrome.options import Options
+import glob
 
 #class Scrapeo:
     # creamos el constructor
     #def __init__(self, ):
+"data/data_completo/resultados"
 
-
-def get_competiciones(url, coso = False):
+def get_competiciones(url, ruta_carpeta_guardado):
     """
     Función que abre una nueva ventana de Chrome en la URL indicada y devuelve el driver.
 
@@ -27,32 +28,55 @@ def get_competiciones(url, coso = False):
     Returns:
         Webdriver.Chrome: Instancia del navegador abierto en la URL proporcionada.
     """
-    if coso == False:
-        driver = webdriver.Chrome()
+    chrome_options = webdriver.ChromeOptions()
+    download_dir = os.path.abspath(ruta_carpeta_guardado)
+    os.makedirs(download_dir, exist_ok=True)
 
-    elif coso == True:
-
-        chrome_options = webdriver.ChromeOptions()
-        download_dir = os.path.abspath("data/data_completo/resultados")
-        os.makedirs(download_dir, exist_ok=True)
-
-        prefs = {
-                "download.default_directory": download_dir,
-                "download.prompt_for_download": False,
-                "directory_upgrade": True,
-                "safebrowsing.enabled": True
-            }
-        chrome_options.add_experimental_option("prefs", prefs)
-        driver = webdriver.Chrome(options=chrome_options)
+    prefs = { "download.default_directory": download_dir,
+              "download.prompt_for_download": False,
+              "directory_upgrade": True,
+              "safebrowsing.enabled": True }
+    
+    chrome_options.add_experimental_option("prefs", prefs)
+    driver = webdriver.Chrome(options=chrome_options)
     
     driver.get(url)
     return driver
 
-def descarga_excels(driver):
-    excel = buscador_elementos(driver, "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a")
-    excel.click()
+def descarga_excels(lista_urls, ruta_carpeta_guardado, disciplina = "salto"):
 
-    time.sleep(3)
+    path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
+    
+    if disciplina == "salto":
+        i = 5
+    elif disciplina == "doma":
+        i = 4
+    elif disciplina == "completo":
+        i = 3
+    
+    for url in lista_urls:
+        driver = get_competiciones(url) # inicializamos el driver con la url de los resultados 
+
+    time.sleep(2)
+
+    tipo_prueba = buscador_elementos(driver, path_tipo_prueba).text # buscamos el tipo de prueba en la que estamos
+    excel = buscador_elementos(driver, "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a")
+    excel.click() # hacemos click en el enlace de descarga del archivo excel
+
+    time.sleep(5)
+
+    # renombramos el archivo
+    download_dir = os.path.abspath(ruta_carpeta_guardado) # convertimos la ruta pasada a una ruta absoluta del sistema operativo, para asegurarnos que se busque de manera correcta
+    list_of_files = glob.glob(os.path.join(download_dir, '*.xls')) # se crea una lista con los archivos .xls dentro de la carpeta de donde se descarga el archivo
+    if list_of_files:
+        # en caso de que haya archivos de tipo excel, continuará
+        latest_file = max(list_of_files, key=os.path.getctime) # buscamos el archivo con fecha de creacion/modificacion más reciente, siendo este el ultimo añadido a la carpeta
+        base = os.path.basename(latest_file) # obtenemos el nombre del archivo, sin la ruta
+        nombre, ext = os.path.splitext(base) # separamos el nombre de la extensión
+        nuevo_nombre = f"{nombre}{tipo_prueba}{ext}"# definimos el nuevo nombre, que se compondrá por el nombre original del archivo, el tipo de prueba en la que estemos, y la extensión
+        nuevo_path = os.path.join(download_dir, nuevo_nombre) # se unen la carpeta de descargas con el nuevo nombre del archivo, para saber donde mover o renombrar el archivo
+        os.rename(latest_file, nuevo_path) # se renombra el archivo
+        print(f"Archivo renombrado a: {nuevo_nombre}")
     driver.quit()
 
 def creacion_dictios_guardado(creacion = True):

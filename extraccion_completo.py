@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     elif condicion == 2:
         # me hace la extracicon de los excels
-        driver = get_competiciones("https://gestion.cbservicios.net/RFHE_RESULTADOS_WEB/ES/PAGE_CCM_Resultados_2.awp?P1=227038&AWPIDA8F4E70E=21CF0AFEB537B76BC223AA2FF731C07F6FD1A148", coso=True)
+        driver = get_competiciones("https://gestion.cbservicios.net/RFHE_RESULTADOS_WEB/ES/PAGE_CCM_Resultados_2.awp?P1=227038&AWPIDA8F4E70E=21CF0AFEB537B76BC223AA2FF731C07F6FD1A148")
         descarga_excels(driver)
 
     elif condicion == 3:

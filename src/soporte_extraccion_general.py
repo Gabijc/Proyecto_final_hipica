@@ -40,7 +40,7 @@ def get_competiciones(url, ruta_carpeta_guardado):
     
     
     chrome_options.add_experimental_option("prefs", prefs)
-    driver = Driver(uc=True, incognito=True, options=chrome_options) # usamos el driver de seleniumbase en vez del de selnium normal para navegar de forma privada entre otras cosas
+    driver = Driver(uc=True, incognito=True, chrome_options=chrome_options) # usamos el driver de seleniumbase en vez del de selnium normal para navegar de forma privada entre otras cosas
     
     driver.get(url)
     return driver

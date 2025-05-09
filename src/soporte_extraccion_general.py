@@ -68,12 +68,12 @@ def descarga_excels(ruta_carpeta_guardado, ruta_carpeta_lectura, disciplina = "s
     for json_path in json_files:
     
         # creamos la lista de urls a partir de la lista que tenemos en el archivo .json
-        with open(read_dir, 'r') as file:
+        with open(json_path, 'r', encoding='utf-8') as file:
                 lista_urls = json.load(file)
 
         for url in lista_urls:
             try:
-                driver = get_competiciones(url) # inicializamos el driver con la url de los resultados 
+                driver = get_competiciones(url, ruta_carpeta_guardado = download_dir) # inicializamos el driver con la url de los resultados 
 
                 time.sleep(2)
 

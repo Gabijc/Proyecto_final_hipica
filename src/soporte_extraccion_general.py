@@ -13,12 +13,15 @@ import os
 from selenium.webdriver.chrome.options import Options
 import glob
 import json
-
+# from seleniumbase import Driver
+# import time
+# driver = Driver(uc=True, incognito=True) 
+# driver.get(url)
 #class Scrapeo:
     # creamos el constructor
     #def __init__(self, ):
 "data/data_completo/resultados"
-
+# poner seleniumbase en el driver
 def get_competiciones(url, ruta_carpeta_guardado):
     """
     Función que abre una nueva ventana de Chrome en la URL indicada y devuelve el driver.
@@ -52,6 +55,7 @@ def descarga_excels(lista_urls, ruta_carpeta_guardado, ruta_carpeta_lectura, dis
         i = 4
     elif disciplina == "completo":
         i = 3
+    # definimos 
     path_tipo_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
     path_enlace_descarga_excel = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[4]/div[1]/div/table/tbody/tr/td/a"
                                   

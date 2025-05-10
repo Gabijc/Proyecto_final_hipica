@@ -24,7 +24,8 @@ def extraccion_salto_nac(url, lista_rutas):
     time.sleep(2)
 
     año = obtencion_año(driver)
-
+    buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click() 
+    
     while año >= 2017:
 
         # vamos a todos los concursos del año en el que estemos

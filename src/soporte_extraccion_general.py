@@ -364,7 +364,7 @@ def archivos(disciplina, ambito, año):
     concursos = f"concursos_{disciplina}_{ambito}_{año}"
     pruebas = f"pruebas_{disciplina}_{ambito}_{año}"
     urls = f"urls_{disciplina}_{ambito}_{año}"
-    lista_nombres_archivos = [concursos, pruebas]
+    lista_nombres_archivos = [concursos, pruebas, urls]
     return lista_nombres_archivos
 
 def descargar_excel(lista_urls, ruta_guardado, disciplina):

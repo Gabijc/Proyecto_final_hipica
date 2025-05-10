@@ -22,7 +22,7 @@ def extraccion_salto_nac(url, lista_rutas):
     ambito_buscado, disciplina_buscada = resultados_disciplina(driver, disciplina = "salto")
     cambio_pestaña(1,driver)
     time.sleep(2)
-    buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click() 
+ 
     año = obtencion_año(driver)
 
     while año >= 2017:
@@ -126,11 +126,11 @@ def extraccion_salto_int(url, lista_rutas):
         # Buscamos los concursos del año que nos aparece
         competiciones_año(driver)
 
-        time.sleep(3)
+        time.sleep(0.5)
 
         maximo_n_concursos = int(buscador_elementos(driver, "/html/body/form/div/div/div/ul/li[13]/font").text.split(" ")[-1].replace("(", "").replace(")", ""))
         if año == 2025:
-            rango = range(5,33)
+            rango = range(5,154)
         elif año < 2025:
             rango = range(5, maximo_n_concursos + 5) 
 
@@ -152,16 +152,32 @@ def extraccion_salto_int(url, lista_rutas):
                         time.sleep(1) 
                     
                     elif "Resultados: Ver resultados  Ver" in contenido_general:
+                        print(contenido_general)
+
                         extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_salto_int, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
-                        cambio_pestaña(3,driver)
-            
-                        extraccion_info_pruebas(driver, dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int)
-                        
-                        driver.close()
-                        cambio_pestaña(2, driver)
-                        driver.close()
-                        cambio_pestaña(1, driver)
                         time.sleep(2)
+                        try:
+                            cambio_pestaña(3,driver)
+                            time.sleep(2)
+                            extraccion_info_pruebas(driver, dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int)
+                        
+                            driver.close()
+                            cambio_pestaña(2, driver)
+                            driver.close()
+                            cambio_pestaña(1, driver)
+                            time.sleep(2)
+                        except IndexError:
+                            time.sleep(5)
+                            driver.refresh()
+                            try:
+                                extraccion_info_concursos(driver, dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int)
+                                driver.close()
+                                cambio_pestaña(1, driver)
+                            except Exception as e:
+                                driver.close()
+                                cambio_pestaña(1, driver)
+                                print(f"Error ocurrido:{e}")
+                                 
 
                 except NoSuchElementException:
                     raise NoSuchElementException
@@ -186,7 +202,6 @@ def extraccion_salto_int(url, lista_rutas):
 
     driver.quit()
     
-    return urls_resultados_salto_int   
 
 # def extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes, diccionario_caballos):
 

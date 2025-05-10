@@ -32,7 +32,7 @@ def extraccion_salto_nac(url, lista_rutas):
 
         maximo_n_concursos = int(buscador_elementos(driver, "/html/body/form/div/div/div/ul/li[13]/font").text.split(" ")[-1].replace("(", "").replace(")", ""))
         if año == 2025:
-            rango = range(5,83)
+            rango = range(5,139)
         elif año < 2025:
             rango = range(5, maximo_n_concursos + 5) 
 

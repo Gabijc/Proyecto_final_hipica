@@ -15,7 +15,7 @@ url = url_scrapeo
 
 if __name__ == "__main__":
 
-    condicion = 3
+    condicion = 1
 
     if condicion == 1:
 
@@ -30,6 +30,9 @@ if __name__ == "__main__":
 
     elif condicion == 3:
         lectura_excels(ruta_resultados)
+    
+    else:
+        print("mal")
 
     # elif condicion == 3:
     #     # me hace la extraccion de jinetes

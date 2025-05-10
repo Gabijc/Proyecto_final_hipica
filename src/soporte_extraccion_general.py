@@ -363,8 +363,9 @@ def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, 
 
 
 def archivos(disciplina, ambito, año):
-    concursos = f"concursos_{disciplina} _{ambito}_{año}"
-    pruebas = f"pruebas_{disciplina} _{ambito}_{año}"
+    concursos = f"concursos_{disciplina}_{ambito}_{año}"
+    pruebas = f"pruebas_{disciplina}_{ambito}_{año}"
+    urls = f"urls_{disciplina}_{ambito}_{año}"
     lista_nombres_archivos = [concursos, pruebas]
     return lista_nombres_archivos
 

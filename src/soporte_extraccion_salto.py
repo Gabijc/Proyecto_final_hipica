@@ -22,7 +22,7 @@ def extraccion_salto_nac(url, lista_rutas):
     ambito_buscado, disciplina_buscada = resultados_disciplina(driver, disciplina = "salto")
     cambio_pestaña(1,driver)
     time.sleep(2)
-
+    buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click() 
     año = obtencion_año(driver)
 
     while año >= 2017:

@@ -10,7 +10,7 @@ ruta_pruebas = os.getenv("ruta_pruebas_salto")
 ruta_resultados = os.getenv("ruta_resultados_salto")
 lista_urls = ""
 
-rutas = [ruta_concursos, ruta_pruebas]
+rutas = [ruta_concursos, ruta_pruebas, ruta_resultados]
 url = url_scrapeo
 
 if __name__ == "__main__":

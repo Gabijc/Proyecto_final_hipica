@@ -78,7 +78,7 @@ def extraccion_salto_nac(url, lista_rutas):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
 
-        lista_archivos = [dictio_concursos_salto_nac, dictio_pruebas_salto_nac]
+        lista_archivos = [dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac]
         nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
         i = 0

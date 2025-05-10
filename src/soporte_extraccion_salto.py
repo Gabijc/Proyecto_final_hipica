@@ -22,7 +22,7 @@ def extraccion_salto_nac(url, lista_rutas):
     ambito_buscado, disciplina_buscada = resultados_disciplina(driver, disciplina = "salto")
     cambio_pestaña(1,driver)
     time.sleep(2)
-   
+    buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click() 
     año = obtencion_año(driver)
 
     while año >= 2017:
@@ -52,21 +52,35 @@ def extraccion_salto_nac(url, lista_rutas):
                         driver.close()
                         cambio_pestaña(1, driver)
                         time.sleep(1)
-
+                    
                     elif "Resultados: Ver resultados  Ver" in contenido_general:
                         print(contenido_general)
                         
                         extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_salto_nac, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
-                        cambio_pestaña(3, driver)
-                        time.sleep(1)
-
-                        extraccion_info_pruebas(driver, dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac)
-
-                        driver.close()
-                        cambio_pestaña(2, driver)
-                        driver.close()
-                        cambio_pestaña(1, driver)
                         time.sleep(2)
+                        
+                        try:
+                            cambio_pestaña(3, driver)
+                            time.sleep(2)
+                            extraccion_info_pruebas(driver, dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac)
+
+                            driver.close()
+                            cambio_pestaña(2, driver)
+                            driver.close()
+                            cambio_pestaña(1, driver)
+                            time.sleep(2)
+
+                        except IndexError:
+                            time.sleep(10)
+                            driver.refresh()
+                            try:
+                                extraccion_info_concursos(driver, dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac)
+                                driver.close()
+                                cambio_pestaña(1, driver)
+                            except Exception as e:
+                                driver.close()
+                                cambio_pestaña(1, driver)
+                                print(f"Error ocurrido:{e}")
 
                 except NoSuchElementException:
                     raise NoSuchElementException
@@ -90,7 +104,6 @@ def extraccion_salto_nac(url, lista_rutas):
 
     driver.quit()
 
-    return urls_resultados_salto_nac
 
 def extraccion_salto_int(url, lista_rutas):
     

@@ -297,6 +297,7 @@ def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, con
                           "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[19]/td[3]/a",
                           "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[21]/td[3]/a"]
         
+        
     elif ambito_buscado == "internacional":
         paths_botones = ["/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[18]/td[3]/a",
                          "/html/body/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table/tbody/tr[21]/td[3]/a",

@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
     if condicion == 1:
 
-        urls_nacionales = extraccion_salto_nac(url, lista_rutas = rutas)
-        descargar_excel(lista_urls = urls_nacionales, ruta_guardado = ruta_resultados, disciplina = "salto")
+        extraccion_salto_nac(url, lista_rutas = rutas)
+        # descargar_excel(lista_urls = urls_nacionales, ruta_guardado = ruta_resultados, disciplina = "salto")
         
 
     elif condicion == 2:

@@ -60,10 +60,7 @@ def extraccion_salto_nac(url, lista_rutas):
                         cambio_pestaña(3, driver)
                         time.sleep(1)
 
-                        if i == 5 and año == 2025:
-                            extraccion_info_pruebas(driver, dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac, es_primer_concurso=True)
-                        else:
-                            extraccion_info_pruebas(driver, dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac)
+                        extraccion_info_pruebas(driver, dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac)
 
                         driver.close()
                         cambio_pestaña(2, driver)
@@ -144,11 +141,8 @@ def extraccion_salto_int(url, lista_rutas):
                     elif "Resultados: Ver resultados  Ver" in contenido_general:
                         extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_salto_int, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
                         cambio_pestaña(3,driver)
-                        
-                        if i == 5 and año == 2025:
-                            extraccion_info_pruebas(driver, dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int, es_primer_concurso=True)
-                        else:
-                            extraccion_info_pruebas(driver, dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int)
+            
+                        extraccion_info_pruebas(driver, dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int)
                         
                         driver.close()
                         cambio_pestaña(2, driver)
@@ -163,7 +157,7 @@ def extraccion_salto_int(url, lista_rutas):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
         
-        lista_archivos = [dictio_concursos_salto_int, dictio_pruebas_salto_int]
+        lista_archivos = [dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int]
         nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
         i = 0

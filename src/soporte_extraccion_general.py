@@ -52,7 +52,10 @@ def creacion_dictios_guardado(creacion = True):
                             'Disciplina': [],
                             'Federación': [],
                             'Resultados': [],
-                            'País': []}
+                            'País': [], 
+                            "Inicio": [],
+                            "Fin": [],
+                            "Ambito": []}
         
         dictio_pruebas = {'Disciplina': [],
                                 'Fecha': [],
@@ -318,22 +321,15 @@ def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, con
 
         
 
-def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, lista_urls, es_primer_concurso = False):
+def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, lista_urls):
     
     # Obtenemos la información del concurso que se encuentra en la tabla de las pruebas
     path_info_restante = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td"
                           
     info_concurso_restante = buscador_elementos(driver, path_info_restante).text.split("\n")
 
-    if  es_primer_concurso == True:
-
-        # Creamos las nuevas claves que sacamos de la info que esta donde las pruebas
-        diccionario_concursos[info_concurso_restante[2].strip(":")] = []
-        diccionario_concursos[info_concurso_restante[4].strip(":")] = []
-        diccionario_concursos[info_concurso_restante[8].strip(":")] = []
-                
     # metemos la info del concurso que nos falta
-    guardado_info(diccionario = diccionario_concursos, elementos = info_concurso_restante, claves = ["Inicio", "Final", "Ámbito"], indices = [3, 5, -1], info = "general")
+    guardado_info(diccionario = diccionario_concursos, elementos = info_concurso_restante, claves = ["Inicio", "Final", "Ambito"], indices = [3, 5, -1], info = "general")
 
     # Obtenemos el nombre del concurso para luego meterlo en la tabla de pruebas
     path_nombre_concurso = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[1]/div/table/tbody/tr/td[2]/table/tbody/tr"

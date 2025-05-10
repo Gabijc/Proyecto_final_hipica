@@ -91,6 +91,7 @@ def extraccion_salto_nac(url, lista_rutas):
         año = obtencion_año(driver)
 
     driver.quit()
+    
     return urls_resultados_salto_nac
 
 def extraccion_salto_int(url, lista_rutas):

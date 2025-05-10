@@ -7,7 +7,7 @@ load_dotenv()
 url_scrapeo = os.getenv("url_scrapeo")
 ruta_concursos = os.getenv("ruta_concursos_salto")
 ruta_pruebas = os.getenv("ruta_pruebas_salto")
-ruta_resultados = os.getenv("ruta_urls_salto")
+ruta_resultados = os.getenv("ruta_resultados_salto")
 lista_urls = ""
 
 rutas = [ruta_concursos, ruta_pruebas]

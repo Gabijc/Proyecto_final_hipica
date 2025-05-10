@@ -16,7 +16,7 @@ import json
 # from seleniumbase import Driver
 
 
-def get_competiciones(url, ruta_carpeta_guardado):
+def get_competiciones(url, descarga = None):
     """
     Función que abre una nueva ventana de Chrome en la URL indicada y devuelve el driver.
 
@@ -26,18 +26,19 @@ def get_competiciones(url, ruta_carpeta_guardado):
     Returns:
         Webdriver.Chrome: Instancia del navegador abierto en la URL proporcionada.
     """
-
-    download_dir = os.path.abspath(ruta_carpeta_guardado)
-    os.makedirs(download_dir, exist_ok=True)
-
-    chrome_options = Options()
-    prefs = { "download.default_directory": download_dir,
-              "download.prompt_for_download": False,
-              "directory_upgrade": True,
-              "safebrowsing.enabled": True }
-
-    chrome_options.add_experimental_option("prefs", prefs)
     driver = webdriver.Chrome(options = chrome_options) 
+    if descarga is not None:
+        download_dir = os.path.abspath(descarga)
+        os.makedirs(download_dir, exist_ok=True)
+
+        chrome_options = Options()
+        prefs = { "download.default_directory": download_dir,
+                "download.prompt_for_download": False,
+                "directory_upgrade": True,
+                "safebrowsing.enabled": True }
+
+        chrome_options.add_experimental_option("prefs", prefs)
+        
     
     driver.get(url)
     return driver

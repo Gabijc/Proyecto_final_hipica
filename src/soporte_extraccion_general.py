@@ -54,7 +54,7 @@ def creacion_dictios_guardado(creacion = True):
                             'Resultados': [],
                             'País': [], 
                             "Inicio": [],
-                            "Fin": [],
+                            "Final": [],
                             "Ambito": []}
         
         dictio_pruebas = {'Disciplina': [],

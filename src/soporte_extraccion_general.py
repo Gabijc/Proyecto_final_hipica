@@ -437,3 +437,31 @@ def descargar_excel(lista_urls, ruta_guardado, disciplina):
 
     finally:
       driver.quit()
+
+def lectura_excels(ruta_archivo):
+
+    directorio = ruta_archivo
+
+    # Obtener la lista de todos los archivos en el directorio
+    archivos = os.listdir(directorio)
+
+    # Filtrar solo los archivos que parecen ser de Excel (puedes refinar esto más si es necesario)
+    archivos_excel = [f for f in archivos if f.endswith(('.xlsx', '.xls'))]
+
+    if archivos_excel:
+        # Ordenar la lista de archivos para asegurar que el "primero" sea consistente
+        archivos_excel.sort()
+
+        for nombre_excel in archivos_excel:
+            ruta_excel = os.path.join(directorio, nombre_excel)
+            print(f"\n--- Leyendo archivo: {nombre_excel} ---")
+            try:
+                # Leer el archivo Excel actual
+                df = pd.read_excel(ruta_excel)
+                print(df.head()) # Mostrar las primeras filas de cada DataFrame
+            except FileNotFoundError:
+                print(f"Error: No se encontró el archivo: {ruta_excel}")
+            except Exception as e:
+                print(f"Ocurrió un error al leer el archivo {nombre_excel}: {e}")
+    else:
+        print("No se encontraron archivos Excel en el directorio.")            

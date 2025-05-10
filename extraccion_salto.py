@@ -1,5 +1,5 @@
-from src.soporte_extraccion_salto import extraccion_salto_nac, extraccion_salto_int, extraccion_resultados_jinetes_caballos
-from src.soporte_extraccion_general import descargar_excel
+from src.soporte_extraccion_salto import extraccion_salto_nac, extraccion_salto_int
+from src.soporte_extraccion_general import descargar_excel, lectura_excels
 import os 
 from dotenv import load_dotenv
 
@@ -15,7 +15,7 @@ url = url_scrapeo
 
 if __name__ == "__main__":
 
-    condicion = 1
+    condicion = 3
 
     if condicion == 1:
 
@@ -27,9 +27,9 @@ if __name__ == "__main__":
         
         urls_int = extraccion_salto_int(url, lista_rutas = rutas)
         descargar_excel(lista_urls = urls_int, ruta_guardado = ruta_resultados, disciplina = "salto")
-        
-    else:
-        print("todo mal")
+
+    elif condicion == 3:
+        lectura_excels(ruta_resultados)
 
     # elif condicion == 3:
     #     # me hace la extraccion de jinetes

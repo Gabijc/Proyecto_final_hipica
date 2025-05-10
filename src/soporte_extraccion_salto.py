@@ -25,7 +25,7 @@ def extraccion_salto_nac(url, lista_rutas):
 
     año = obtencion_año(driver)
 
-    while año >= 2023:
+    while año >= 2025:
 
         # vamos a todos los concursos del año en el que estemos
         competiciones_año(driver)
@@ -77,7 +77,7 @@ def extraccion_salto_nac(url, lista_rutas):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
 
-        lista_archivos = [dictio_concursos_salto_nac, dictio_pruebas_salto_nac, urls_resultados_salto_nac]
+        lista_archivos = [dictio_concursos_salto_nac, dictio_pruebas_salto_nac]
         nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
         i = 0
@@ -89,6 +89,9 @@ def extraccion_salto_nac(url, lista_rutas):
         
         buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()        
         año = obtencion_año(driver)
+
+    driver.quit()
+    return urls_resultados_salto_nac
 
 def extraccion_salto_int(url, lista_rutas):
     
@@ -156,7 +159,7 @@ def extraccion_salto_int(url, lista_rutas):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
         
-        lista_archivos = [dictio_concursos_salto_int, dictio_pruebas_salto_int, urls_resultados_salto_int]
+        lista_archivos = [dictio_concursos_salto_int, dictio_pruebas_salto_int]
         nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
         i = 0
@@ -170,7 +173,8 @@ def extraccion_salto_int(url, lista_rutas):
         time.sleep(3)        
         año = obtencion_año(driver)
 
-    driver.quit()   
+    driver.quit()
+    return urls_resultados_salto_int   
 
 def extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes, diccionario_caballos):
 

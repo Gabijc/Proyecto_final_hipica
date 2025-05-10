@@ -75,20 +75,21 @@ def extraccion_completo_nac(url, lista_rutas):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
 
-        lista_archivos = [dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac]
+        lista_archivos = [dictio_concursos_completo_nac, dictio_pruebas_completo_nac]
         nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
         i = 0
         for ruta in lista_rutas:
                  
             with open(f"{ruta}{nombres_archivos[i]}.json", "w", encoding="utf-8") as f:
-                        json.dump(lista_archivos[i], f, ensure_ascii=False, indent=4) # se deja la ruta desde la que estoy ejecutando .py, no desde el src
+                         json.dump(lista_archivos[i], f, ensure_ascii=False, indent=4) # se deja la ruta desde la que estoy ejecutando .py, no desde el src
             i += 1
 
         buscador_elementos(driver,"/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[2]/td[2]/a").click()        
         año = obtencion_año(driver)
 
     driver.quit()   
+    return urls_resultados_completo_nac
 
 def extraccion_completo_int(url, lista_rutas):
 

@@ -39,7 +39,7 @@ def get_competiciones(url, descarga = None):
 
         chrome_options.add_experimental_option("prefs", prefs)
         
-    
+    driver = webdriver.Chrome(options=chrome_options)
     driver.get(url)
     return driver
 

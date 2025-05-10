@@ -389,7 +389,7 @@ def descargar_excel(lista_urls, ruta_guardado, disciplina):
   for url in lista_urls:
 
     driver = get_competiciones(url, ruta_guardado)
-    time.sleep(3)
+    time.sleep(2)
     try: 
 
       while True:
@@ -406,7 +406,7 @@ def descargar_excel(lista_urls, ruta_guardado, disciplina):
           print(f"Archivos encontrados en la ruta: {os.listdir(ruta_guardado)}")
             
           if archivos_en_ruta:
-            time.sleep(2)
+            time.sleep(1)
           else:
               print("No se encontraron archivos .xls en la carpeta de descarga.")
 

@@ -15,7 +15,7 @@ def extraccion_salto_nac(url, lista_rutas):
     dictio_concursos_salto_nac, dictio_pruebas_salto_nac = creacion_dictios_guardado()
     urls_resultados_salto_nac = []
 
-    driver = get_competiciones(url)
+    driver = get_competiciones(url, lista_rutas[0])
     time.sleep(2)
 
     # Seleccionamos el ambito de los concursos y la disciplina, en este caso nacional y completo
@@ -32,7 +32,7 @@ def extraccion_salto_nac(url, lista_rutas):
 
         maximo_n_concursos = int(buscador_elementos(driver, "/html/body/form/div/div/div/ul/li[13]/font").text.split(" ")[-1].replace("(", "").replace(")", ""))
         if año == 2025:
-            rango = range(5,139)
+            rango = range(5,83)
         elif año < 2025:
             rango = range(5, maximo_n_concursos + 5) 
 
@@ -49,7 +49,8 @@ def extraccion_salto_nac(url, lista_rutas):
                     contenido_general =  buscador_elementos(driver, "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table").text.split('\n')
                                                                     
                     if "Resultados: Ver resultados  Ver" not in contenido_general:
-                        driver.back()
+                        driver.close()
+                        cambio_pestaña(1, driver)
                         time.sleep(1)
 
                     elif "Resultados: Ver resultados  Ver" in contenido_general:
@@ -91,7 +92,7 @@ def extraccion_salto_nac(url, lista_rutas):
         año = obtencion_año(driver)
 
     driver.quit()
-    
+
     return urls_resultados_salto_nac
 
 def extraccion_salto_int(url, lista_rutas):

@@ -27,6 +27,7 @@ if __name__ == "__main__":
         
         urls_int = extraccion_salto_int(url, lista_rutas = rutas)
         descargar_excel(lista_urls = urls_int, ruta_guardado = ruta_resultados, disciplina = "salto")
+        
     else:
         print("todo mal")
 

@@ -14,7 +14,7 @@ url = url_scrapeo
 
 if __name__ == "__main__":
 
-    condicion = 1
+    condicion = 2
 
     if condicion == 1:
 
@@ -24,9 +24,9 @@ if __name__ == "__main__":
         
 
     elif condicion == 2:
-        # descargar_excel(lista_urls = urls_nacionales, ruta_guardado = ruta_resultados, disciplina = "salto")
-        # descargar_excel(lista_urls = urls_int, ruta_guardado = ruta_resultados, disciplina = "salto")
-        print("ok")
+        descargar_excel(lista_urls = urls_nacionales, ruta_guardado = ruta_resultados, disciplina = "salto")
+        descargar_excel(lista_urls = urls_int, ruta_guardado = ruta_resultados, disciplina = "salto")
+        
 
     elif condicion == 3:
         lectura_excels(ruta_resultados)

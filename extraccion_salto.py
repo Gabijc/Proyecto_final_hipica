@@ -9,24 +9,24 @@ ruta_concursos = os.getenv("ruta_concursos_salto")
 ruta_pruebas = os.getenv("ruta_pruebas_salto")
 ruta_resultados = os.getenv("ruta_resultados_salto")
 lista_urls = ""
-
 rutas = [ruta_concursos, ruta_pruebas, ruta_resultados]
 url = url_scrapeo
 
 if __name__ == "__main__":
 
-    condicion = 2
+    condicion = 1
 
     if condicion == 1:
 
         extraccion_salto_nac(url, lista_rutas = rutas)
-        # descargar_excel(lista_urls = urls_nacionales, ruta_guardado = ruta_resultados, disciplina = "salto")
+        extraccion_salto_int(url, lista_rutas = rutas)
+        
         
 
     elif condicion == 2:
-        
-        extraccion_salto_int(url, lista_rutas = rutas)
+        # descargar_excel(lista_urls = urls_nacionales, ruta_guardado = ruta_resultados, disciplina = "salto")
         # descargar_excel(lista_urls = urls_int, ruta_guardado = ruta_resultados, disciplina = "salto")
+        print("ok")
 
     elif condicion == 3:
         lectura_excels(ruta_resultados)

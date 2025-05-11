@@ -14,7 +14,7 @@ def extraccion_completo_nac(url, lista_rutas):
     dictio_concursos_completo_nac, dictio_pruebas_completo_nac = creacion_dictios_guardado()
     urls_resultados_completo_nac = []
 
-    driver = get_competiciones(url)
+    driver = get_competiciones(url, lista_rutas[0])
     time.sleep(2)
 
     # Seleccionamos el ambito de los concursos y la disciplina, en este caso nacional y completo
@@ -24,7 +24,7 @@ def extraccion_completo_nac(url, lista_rutas):
 
     año = obtencion_año(driver)
 
-    while año >= 2023:
+    while año >= 2017:
 
         # vamos a todos los concursos del año en el que estemos
         competiciones_año(driver)
@@ -43,7 +43,7 @@ def extraccion_completo_nac(url, lista_rutas):
                 time.sleep(1)
                 try:
                     concurso_bueno.click()
-                    cambio_pestaña(1, driver)
+                    #cambio_pestaña(1, driver)
                     time.sleep(2)
                     contenido_general =  buscador_elementos(driver, "/html/body/form/table/tbody/tr[2]/td/table[2]/tbody/tr[1]/td[2]/table").text.split('\n')
                                                                     
@@ -55,18 +55,28 @@ def extraccion_completo_nac(url, lista_rutas):
                         print(contenido_general)
                         
                         extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_completo_nac, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
-                        cambio_pestaña(2, driver)
-                        time.sleep(1)
-
-                        if i == 5 and año == 2025:
-                            extraccion_info_pruebas(driver, dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac, es_primer_concurso=True)
-                        else:
+                        try:
+                            cambio_pestaña(2, driver)
+                            time.sleep(1)
                             extraccion_info_pruebas(driver, dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac)
 
-                        driver.close()
-                        cambio_pestaña(1, driver)
-                        driver.back()
-                        time.sleep(2)
+                            driver.close()
+                            cambio_pestaña(1, driver)
+                            driver.back()
+                            time.sleep(2)
+
+                        except IndexError:
+                            time.sleep(5)
+                            driver.refresh()
+                            try:
+                                cambio_pestaña(2, driver)
+                                time.sleep(1)
+                                extraccion_info_pruebas(driver, dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac)
+                            except Exception as e:
+                                driver.close()
+                                cambio_pestaña(1,driver)
+                                driver.back()
+                                time.sleep(1)
 
                 except NoSuchElementException:
                     raise NoSuchElementException
@@ -75,7 +85,7 @@ def extraccion_completo_nac(url, lista_rutas):
                 concurso_bueno = buscador_elementos(driver,f"/html/body/form/div/div/div/div/div[13]/table/tbody/tr[{i}]/td[4]/font").text
                 print(concurso_bueno)
 
-        lista_archivos = [dictio_concursos_completo_nac, dictio_pruebas_completo_nac]
+        lista_archivos = [dictio_concursos_completo_nac, dictio_pruebas_completo_nac, urls_resultados_completo_nac]
         nombres_archivos = archivos(disciplina_buscada, ambito_buscado, año)
 
         i = 0
@@ -89,7 +99,6 @@ def extraccion_completo_nac(url, lista_rutas):
         año = obtencion_año(driver)
 
     driver.quit()   
-    return urls_resultados_completo_nac
 
 def extraccion_completo_int(url, lista_rutas):
 
@@ -97,7 +106,7 @@ def extraccion_completo_int(url, lista_rutas):
     urls_resultados_completo_int = []
 
     # inicializamos el driver y lo abrimos
-    driver = get_competiciones(url)
+    driver = get_competiciones(url, lista_rutas[0])
     time.sleep(2)
 
     # Seleccionamos el ambito de los concursos y la disciplina, en este caso nacional y completo
@@ -107,12 +116,12 @@ def extraccion_completo_int(url, lista_rutas):
 
     año = obtencion_año(driver)
 
-    while año >= 2023:
+    while año >= 2017:
 
         # Buscamos los concursos del año que nos aparece
         competiciones_año(driver)
 
-        time.sleep(3)
+        time.sleep(1)
 
         maximo_n_concursos = int(buscador_elementos(driver, "/html/body/form/div/div/div/ul/li[13]/font").text.split(" ")[-1].replace("(", "").replace(")", ""))
         if año == 2025:
@@ -138,19 +147,32 @@ def extraccion_completo_int(url, lista_rutas):
                         time.sleep(1) 
                     
                     elif "Resultados: Ver resultados  Ver" in contenido_general:
+                        print(contenido_general)
+
                         extraccion_info_concursos(driver, diccionario_concursos=dictio_concursos_completo_int, ambito_buscado=ambito_buscado, contenido_general=contenido_general)
-                        cambio_pestaña(3,driver)
-                        if i == 5 and año == 2025:
-                            extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int, es_primer_concurso=True)
-                            # descarga_excel
-                        else:
+                        time.sleep(1)
+                        try:
+                            cambio_pestaña(3,driver)
+                            time.sleep(2)
                             extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int)
-                            # descarga_excel
-                        driver.close()
-                        cambio_pestaña(2, driver)
-                        driver.close()
-                        cambio_pestaña(1, driver)
-                        time.sleep(2)
+                            
+                            driver.close()
+                            cambio_pestaña(2, driver)
+                            driver.close()
+                            cambio_pestaña(1, driver)
+                            time.sleep(2)
+
+                        except IndexError:
+                            time.sleep(5)
+                            driver.refresh()
+                            try:
+                                extraccion_info_pruebas(driver, dictio_concursos_completo_int, dictio_pruebas_completo_int, urls_resultados_completo_int)
+                                driver.close()
+                                cambio_pestaña(1, driver)
+                            except Exception as e:
+                                driver.close()
+                                cambio_pestaña(1, driver)
+                                time.sleep(2)
 
                 except NoSuchElementException:
                     raise NoSuchElementException

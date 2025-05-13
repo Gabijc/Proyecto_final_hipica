@@ -368,75 +368,93 @@ def archivos(disciplina, ambito, año):
     lista_nombres_archivos = [concursos, pruebas, urls]
     return lista_nombres_archivos
 
-def descargar_excel(lista_urls, ruta_guardado, disciplina):
-  
-  if disciplina == "salto": 
-    i = 5
-    j = 3
-  elif disciplina == "doma":
-    i = 4
-    j = 3
-  elif disciplina == "completo":
-    i = 3
-    j = 4
+def descargar_excel(ruta_lectura, ruta_guardado, disciplina):
+    if disciplina == "salto": 
+        i = 5
+        j = 3
+    elif disciplina == "doma":
+        i = 4
+        j = 3
+    elif disciplina == "completo":
+        i = 3
+        j = 4
 
-  selector_enlace_excel = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[{j}]/div[1]/div/table/tbody/tr/td/a"
-  ruta_nombre_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
-  siguiente_prueba_1 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[3]/div[6]/div/table/tbody/tr/td/a" # completo 
-  siguiente_prueba_2 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[2]/div[6]/div/table/tbody/tr/td/a" # salto y doma 
-  
+    ruta_nombre_prueba = f"/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[{i}]/div[2]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td/div/div[2]/div/table/tbody/tr/td[2]/table/tbody/tr/td"
+    siguiente_prueba_1 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[3]/div[6]/div/table/tbody/tr/td/a" # completo 
+    siguiente_prueba_2 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[2]/div[6]/div/table/tbody/tr/td/a" # salto y doma 
+    id = "A32" # esto es para darle al enlace de descarga del excel
+    ruta_archivo = ruta_lectura
 
-  for url in lista_urls:
+    # Leer el archivo JSON
+    with open(ruta_archivo, 'r', encoding='utf-8') as archivo:
+        lista_urls = json.load(archivo)
 
-    driver = get_competiciones(url, ruta_guardado)
-    time.sleep(2)
-    try: 
+    urls_fallidas = []  # Guardará URLs que fallan al hacer clic
 
-      while True:
-
-        try:
-            
-          coso = buscador_elementos(driver, ruta_nombre_prueba).text
-          print(coso)
-          buscador_elementos(driver, selector_enlace_excel).click()
-          print(f"Descarga del archivo Excel iniciada. Se guardará en: {ruta_guardado}")
-          time.sleep(8) # Espera a que la descarga se complete (ajusta según sea necesario)
-
-          archivos_en_ruta = glob.glob(os.path.join(ruta_guardado, '*.xls'))  # Lista de archivos .xls en la carpeta de descargas
-          print(f"Archivos encontrados en la ruta: {os.listdir(ruta_guardado)}")
-            
-          if archivos_en_ruta:
-            time.sleep(1)
-          else:
-              print("No se encontraron archivos .xls en la carpeta de descarga.")
-
-        except Exception as e:
-            print(f"Ocurrió un error: {e}")
-        
-        try:
-          buscador_elementos(driver, siguiente_prueba_1).click()
-        except NoSuchElementException:
-          buscador_elementos(driver, siguiente_prueba_2).click()
-
-        time.sleep(3)
+    for url in lista_urls:
+        print(f"Procesando URL: {url}")
+        driver = get_competiciones(url, ruta_guardado)
+        time.sleep(2)
 
         try:
-          WebDriverWait(driver, 5).until (EC.alert_is_present())
-          # switch_to.alert for switching to alert and accept
-          alert = driver.switch_to.alert
-          print("alert Exists in page")
-          alert.accept()            
-          break
-                  
-        except TimeoutException:   
-          print("alert does not Exist in page")
-                      
-        except Exception as e:
-          print("Error en el bucle:", e)
-          break
+            while True:
+                try:
+                    coso = buscador_elementos(driver, ruta_nombre_prueba).text
+                    print(coso)
 
-    finally:
-      driver.quit()
+                    try:
+                        driver.find_element(By.ID, id).click()
+                        print(f"Descarga del archivo Excel iniciada. Se guardará en: {ruta_guardado}")
+                        time.sleep(8)
+
+                        archivos_en_ruta = glob.glob(os.path.join(ruta_guardado, '*.xls'))
+                        print(f"Archivos encontrados en la ruta: {os.listdir(ruta_guardado)}")
+
+                        if archivos_en_ruta:
+                            time.sleep(2)
+                        else:
+                            print("No se encontraron archivos .xls en la carpeta de descarga.")
+
+                    except Exception as e:
+                        print(f"No se pudo hacer clic en el ID {id}: {e}")
+                        urls_fallidas.append(url)
+                        break  # Sale del while y pasa al finally
+
+                    try:
+                        buscador_elementos(driver, siguiente_prueba_1).click()
+                    except NoSuchElementException:
+                        buscador_elementos(driver, siguiente_prueba_2).click()
+
+                    time.sleep(2)
+
+                    try:
+                        WebDriverWait(driver, 5).until(EC.alert_is_present())
+                        alert = driver.switch_to.alert
+                        print("Alerta encontrada en la página")
+                        alert.accept()
+                        break
+
+                    except TimeoutException:
+                        print("No hay alerta en la página")
+
+                    except Exception as e:
+                        print("Error en el bucle:", e)
+                        continue
+
+                except Exception as e:
+                    print("Error general dentro del bucle de pruebas:", e)
+                    urls_fallidas.append(url)
+                    break
+
+        finally:
+            driver.quit()
+
+    # Guardar las URLs fallidas en un archivo de texto
+    if urls_fallidas:
+        with open('urls_fallidas.txt', 'w', encoding='utf-8') as f:
+            for url in urls_fallidas:
+                f.write(f"{url}\n")
+        print(f"Se guardaron {len(urls_fallidas)} URLs fallidas en 'urls_fallidas.txt'")
 
 def lectura_excels(ruta_archivo):
 

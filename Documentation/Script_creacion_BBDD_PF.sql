@@ -11,7 +11,7 @@ nacionalidad_caballo VARCHAR(50)
 );
 
 CREATE TABLE jinetes(
-id_jinete VARCHAR(50) PRIMARY KEY,
+id_jinete INT PRIMARY KEY,
 nombre_jinete VARCHAR(50),
 nacionalidad_jinete VARCHAR(50)  
 );

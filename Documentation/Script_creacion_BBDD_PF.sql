@@ -13,7 +13,7 @@ nacionalidad_caballo VARCHAR(50)
 CREATE TABLE jinetes(
 id_jinete VARCHAR(50) PRIMARY KEY,
 nombre_jinete VARCHAR(50),
-nacionalidad_jinete VARCHAR(50)  -- Cambié el nombre a nacionalidad_jinete
+nacionalidad_jinete VARCHAR(50)  
 );
 
 CREATE TABLE concursos(
@@ -38,21 +38,20 @@ id_disciplina INT REFERENCES disciplinas(id_disciplina)
 
 CREATE TABLE resultados(
 id_resultado SERIAL PRIMARY KEY,
-id_jinete VARCHAR(50) REFERENCES jinetes(id_jinete),
+id_jinete INT REFERENCES jinetes(id_jinete),
 id_caballo VARCHAR(50) REFERENCES caballos(id_caballo),
-id_prueba INT REFERENCES pruebas(id_prueba),  -- Asegúrate de que aquí se referencia correctamente a pruebas
+id_prueba INT REFERENCES pruebas(id_prueba),  
 id_concurso INT REFERENCES concursos(id_concurso),
 puesto INT,
 estado VARCHAR(50),
 premio BOOLEAN,
-dinero_premio INT
+dinero_premio FLOAT
 );
 
--- Ahora que la tabla resultados existe, podemos crear las tablas que hacen referencia a ella
 
 CREATE TABLE resultados_doma(
-id_resultado INT REFERENCES resultados(id_resultado),  -- Este será el resultado general
-id_prueba INT REFERENCES resultados(id_prueba),  -- Aquí se guarda el id_prueba desde resultados
+id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),  
+id_prueba INT REFERENCES resultados(id_prueba),  
 nota_juez_E INT,
 nota_juez_H INT,
 nota_juez_C INT,
@@ -62,8 +61,8 @@ nota INT
 );
 
 CREATE TABLE resultados_completo(
-id_resultado INT REFERENCES resultados(id_resultado),
-id_prueba INT REFERENCES resultados(id_prueba),  -- Aquí se guarda el id_prueba desde resultados
+id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),
+id_prueba INT REFERENCES resultados(id_prueba),  
 mer VARCHAR(50),
 puntos_doma FLOAT,
 tiempo_obs_cross FLOAT,
@@ -74,8 +73,8 @@ ptos_total FLOAT,
 );
 
 CREATE TABLE resultados_salto(
-id_resultado SERIAL PRIMARY KEY,
-id_prueba INT REFERENCES resultados(id_prueba),  -- Aquí se guarda el id_prueba desde resultados
+id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),
+id_prueba INT REFERENCES resultados(id_prueba),  
 puntos_obs_r1 FLOAT,
 puntos_tmp_r1 FLOAT,
 tiempo_r1 FLOAT,

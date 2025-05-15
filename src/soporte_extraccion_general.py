@@ -13,6 +13,7 @@ import os
 from selenium.webdriver.chrome.options import Options
 import glob
 import json
+from src.soporte_extraccion_salto import parse_puntuacion_tupla, modificaciones_generales
 # from seleniumbase import Driver
 
 
@@ -456,10 +457,16 @@ def descargar_excel(ruta_lectura, ruta_guardado, disciplina):
                 f.write(f"{url}\n")
         print(f"Se guardaron {len(urls_fallidas)} URLs fallidas en 'urls_fallidas.txt'")
 
-def lectura_excels(ruta_archivo):
-
+def limpieza_excels(ruta_archivo, ruta_guardado):
     directorio = ruta_archivo
 
+    concursos = []
+    tipos_pruebas = []
+    combinaciones_resultados = []
+    dfs = []
+    new_cols = ['Ptos_obs_R1', 'Ptos_tiempo_R1', 'Tiempo_R1',
+                'Ptos_obs_R2', 'Ptos_tiempo_R2', 'Tiempo_R2',
+                'Ptos_obs_R3', 'Ptos_tiempo_R3', 'Tiempo_R3']
     # Obtener la lista de todos los archivos en el directorio
     archivos = os.listdir(directorio)
 
@@ -476,10 +483,30 @@ def lectura_excels(ruta_archivo):
             try:
                 # Leer el archivo Excel actual
                 df = pd.read_excel(ruta_excel)
-                print(df.head()) # Mostrar las primeras filas de cada DataFrame
+                concursos.append(df.iloc[1,1]) # Mostrar las primeras filas de cada DataFrame
+                tipos_pruebas.append(df.iloc[3,1])
+                df = modificaciones_generales(df)
+                combinaciones_resultados.append(df["Puntuacion"])
+                df[new_cols] = df['Puntuacion'].apply(parse_puntuacion_tupla).tolist()
+                dfs.append(df)
             except FileNotFoundError:
                 print(f"Error: No se encontró el archivo: {ruta_excel}")
             except Exception as e:
                 print(f"Ocurrió un error al leer el archivo {nombre_excel}: {e}")
     else:
-        print("No se encontraron archivos Excel en el directorio.")            
+            print("No se encontraron archivos Excel en el directorio.")
+
+    # Concatenar todos los DataFrames en la lista all_dfs
+    if dfs:
+        combined_df = pd.concat(dfs, ignore_index=True)
+        print("\n--- DataFrame combinado ---")
+        print(combined_df.head()) # Mostrar las primeras filas del DataFrame combinado
+        output_csv_path = ruta_guardado
+        try:
+            combined_df.to_csv(output_csv_path)
+            print(f"\nDataFrame combinado guardado exitosamente en: {output_csv_path}")
+        except Exception as e:
+            print(f"Error al guardar el DataFrame combinado como pickle: {e}")
+    else:
+        combined_df = pd.DataFrame()
+        print("\nNo se pudieron leer DataFrames para concatenar.")             

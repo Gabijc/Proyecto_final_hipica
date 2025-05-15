@@ -7,6 +7,8 @@ from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPr
 from selenium.webdriver.support.ui import WebDriverWait
 import os
 import json
+import re
+import pandas as pd
 from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, resultados_disciplina, buscador_elementos, guardado_info, competiciones_año, obtencion_año, creacion_dictios_guardado, extraccion_info_concursos, extraccion_info_pruebas
 from src.soporte_extraccion_general import archivos
 
@@ -202,7 +204,176 @@ def extraccion_salto_int(url, lista_rutas):
 
     driver.quit()
     
+def creacion_columnas(df, columna_crear, columna, coso = "paises"):
+    posiciones = ["RET", "ELI", "NOP"]
 
+    df[columna] = df[columna].astype(str)
+    
+    if coso == "paises":
+        df[columna_crear] = df[columna].apply(lambda x: x.split("(")[1].strip(")") if x.endswith(")") else "ESP")
+        df[columna] = df[columna].apply(lambda x: x.split("(")[0].strip() if x.endswith(")") else x)
+    elif coso == "Estado": 
+        if "Puntuacion" in df.columns:  
+            df["Posicion"] = df.apply(lambda x: "NOP" if pd.isna(x["Puntuacion"]) else x["Posicion"], axis=1)
+        df[columna_crear] = df[columna].apply(lambda x: x if x in posiciones else "FIN")
+    elif coso == "Premio":
+        df[columna_crear] = df[columna].apply(lambda x: False if x == 0 else True)
+        
+def modificaciones_generales(dataframe):
+
+    dataframe["Prueba"] = dataframe.iloc[3,1]
+    dataframe["Categoria"] = dataframe.iloc[4,1]
+    dataframe["Fecha_prueba"] = dataframe.iloc[2,1]
+    dataframe["Concurso"] = dataframe.iloc[1,1].split("(")[0].strip()
+    dataframe = dataframe.iloc[9:].reset_index(drop = True)
+    dataframe = dataframe.rename(columns = {"Unnamed: 0": "Posicion", 
+                                                 "Unnamed: 1": "Lic_jinete",
+                                                 "Unnamed: 2": "Jinete", 
+                                                 "Unnamed: 3": "Lic_caballo", 
+                                                 "Unnamed: 4": "Caballo",
+                                                 "Unnamed: 5": "Raza_caballo",
+                                                 "Unnamed: 6": "Puntuacion",
+                                                 "Unnamed: 7": "Dinero_premio"})
+    dataframe["Raza_caballo"] = dataframe["Raza_caballo"].apply(lambda x: None if x == "--" else x)
+    creacion_columnas(dataframe, "Pais_jinete", "Jinete")
+    creacion_columnas(dataframe, "Pais_caballo", "Caballo")
+    creacion_columnas(dataframe, "Estado", "Posicion", coso = "Estado")
+    creacion_columnas(dataframe, "Premio", "Dinero_premio", coso = "Premio")
+    dataframe = dataframe.reindex(columns = ['Estado','Posicion', 'Lic_jinete', 'Jinete', 'Pais_jinete', 'Lic_caballo', 'Caballo',
+              'Raza_caballo', 'Pais_caballo', 'Puntuacion', 'Premio','Dinero_premio', 'Prueba', 'Fecha_prueba',
+              'Concurso', "Categoria"])
+
+    return dataframe
+
+def parse_puntuacion_tupla(puntuacion_str):
+    """
+    Parsea la cadena de puntuación y devuelve una tupla con los valores
+    para las nuevas columnas.
+    """
+    resultados = str(puntuacion_str).split('\n')
+    ptos_obs = [None] * 3
+    ptos_tiempo = [None] * 3
+    tiempo = [None] * 3
+
+    # Caso específico 1: numero\nnumero(Obs - Tpo)/tiempo
+    match_caso1 = re.match(r'(\d+)\n(\d+)\((\d+) Obs - (\d+) Tpo\)/([\d,]+)', puntuacion_str)
+    if match_caso1:
+        ptos_obs[0] = int(match_caso1.group(1))
+        ptos_obs[1] = int(match_caso1.group(3))
+        ptos_tiempo[1] = int(match_caso1.group(4))
+        tiempo[1] = float(match_caso1.group(5).replace(',', '.'))
+        return (ptos_obs[0], ptos_tiempo[0], tiempo[0],
+                ptos_obs[1], ptos_tiempo[1], tiempo[1],
+                ptos_obs[2], ptos_tiempo[2], tiempo[2])
+
+    # Caso específico 2: numero(Obs - Tpo)\nnumero(Obs - Tpo)/tiempo
+    match_caso2 = re.match(r'(\d+)\((\d+) Obs - (\d+) Tpo\)\n(\d+)\((\d+) Obs - (\d+) Tpo\)/([\d,]+)', puntuacion_str)
+    if match_caso2:
+        ptos_obs[0] = int(match_caso2.group(2))
+        ptos_tiempo[0] = int(match_caso2.group(3))
+        ptos_obs[1] = int(match_caso2.group(5))
+        ptos_tiempo[1] = int(match_caso2.group(6))
+        tiempo[1] = float(match_caso2.group(7).replace(',', '.'))
+        return (ptos_obs[0], ptos_tiempo[0], tiempo[0],
+                ptos_obs[1], ptos_tiempo[1], tiempo[1],
+                ptos_obs[2], ptos_tiempo[2], tiempo[2])
+
+    # Procesamiento por línea si no coinciden los casos específicos
+    for i, resultado in enumerate(resultados[:3]):
+        obs_tiempo_barra_match = re.match(r'(\d+)\((\d+) Obs - (\d+) Tpo\)/([\d,]+)', resultado)
+        simple_barra_match = re.match(r'(\d+)/([\d,]+)', resultado)
+        solo_numero_match = re.match(r'([\d,]+)', resultado)
+        obs_tiempo_solo_match = re.match(r'(\d+)\((\d+) Obs - (\d+) Tpo\)', resultado)
+
+        if i == 0:
+            if simple_barra_match:
+                ptos_obs[i] = int(simple_barra_match.group(1))
+                tiempo[i] = float(simple_barra_match.group(2).replace(',', '.'))
+            elif obs_tiempo_barra_match:
+                ptos_obs[i] = int(obs_tiempo_barra_match.group(2))
+                ptos_tiempo[i] = int(obs_tiempo_barra_match.group(3))
+                tiempo[i] = float(obs_tiempo_barra_match.group(4).replace(',', '.'))
+            elif solo_numero_match:
+                ptos_tiempo[i] = float(solo_numero_match.group(0).replace(',', '.'))
+            elif obs_tiempo_solo_match:
+                ptos_obs[i] = int(obs_tiempo_solo_match.group(2))
+                ptos_tiempo[i] = int(obs_tiempo_solo_match.group(3))
+        elif i == 1:
+            if obs_tiempo_barra_match:
+                ptos_obs[i] = int(obs_tiempo_barra_match.group(2))
+                ptos_tiempo[i] = int(obs_tiempo_barra_match.group(3))
+                tiempo[i] = float(obs_tiempo_barra_match.group(4).replace(',', '.'))
+            elif simple_barra_match:
+                ptos_obs[i] = int(simple_barra_match.group(1))
+                tiempo[i] = float(simple_barra_match.group(2).replace(',', '.'))
+            elif obs_tiempo_solo_match:
+                obs_tpo = re.match(r'(\d+)\((\d+) Obs - (\d+) Tpo\)', resultado)
+                if obs_tpo:
+                    ptos_obs[i] = int(obs_tpo.group(2))
+                    ptos_tiempo[i] = int(obs_tpo.group(3))
+        elif i == 2:
+            if simple_barra_match:
+                ptos_obs[i] = int(simple_barra_match.group(1))
+                tiempo[i] = float(simple_barra_match.group(2).replace(',', '.'))
+
+    return (ptos_obs[0], ptos_tiempo[0], tiempo[0],
+            ptos_obs[1], ptos_tiempo[1], tiempo[1],
+            ptos_obs[2], ptos_tiempo[2], tiempo[2])
+
+def mergeo_dfs(ruta_df_concursos, ruta_df_pruebas, ruta_guardado_df_final):
+
+    with open(ruta_df_concursos, 'r', encoding='utf-8') as file:
+        datos_concursos = json.load(file)
+
+    df_concursos = pd.DataFrame(datos_concursos)
+    df_concursos = df_concursos.rename(columns = {"Nombre": "Concurso", "Categoría": "Categoria_concurso"})
+    df_concursos["Concurso"] = df_concursos["Concurso"].str.strip()
+
+    df_pruebas_resultados = pd.read_csv(ruta_df_pruebas, index_col=0)
+
+    df_final = pd.merge(df_pruebas_resultados, df_concursos, on = "Concurso", how = "inner")
+    df_final['Fecha_prueba'] = pd.to_datetime(df_final['Fecha_prueba'])
+    df_final['Inicio'] = pd.to_datetime(df_final['Inicio'], dayfirst=True)
+    df_final['Final'] = pd.to_datetime(df_final['Final'], dayfirst=True)
+    df_final = df_final[(df_final['Fecha_prueba'] >= df_final['Inicio']) & (df_final['Fecha_prueba'] <= df_final['Final']) & (df_final["Categoria"] == df_final["Categoria_concurso"])]
+    df_final = df_final.drop(['Puntuacion', 'Resultados', 'Categoria_concurso', 'Pais_jinete', 'Pais_caballo', 'Raza_caballo'], axis=1)
+    df_final["Jinete"] = df_final["Jinete"].str.lower()
+    df_final["Caballo"] = df_final["Caballo"].str.lower()
+    df_final["Lic_jinete"] = df_final["Lic_jinete"].astype(str)
+    df_final["Lic_caballo"] = df_final["Lic_caballo"].astype(str)
+    # df_final["Raza_caballo"] = df_final["Raza_caballo"].apply(lambda x: None if x == '(Indt.)' else x)
+    df_final["Lic_jinete"] = df_final["Lic_jinete"].apply(lambda x: "10186822" if x == '--' else x)
+    df_final["Jinete"] = df_final["Jinete"].apply(lambda x: "jesus folch redondo" if x == '-- -- --' else x)
+    lista = ["ELI", "RET", "NOP"]
+    df_final["Posicion"] = df_final["Posicion"].apply(lambda x: None if x in lista else x)
+    df_final["Lic_caballo"] = df_final["Lic_caballo"].apply(lambda x: None if x == '--' else x)
+
+    lic_mas_larga_por_jinete = (
+        df_final[["Jinete", "Lic_jinete"]]
+        .drop_duplicates()
+        .assign(longitud=lambda x: x["Lic_jinete"].astype(str).str.len())
+        .sort_values("longitud", ascending=False)
+        .drop_duplicates(subset="Jinete")
+        .drop(columns="longitud")
+        .set_index("Jinete")
+    )
+
+    lic_mas_larga_por_caballo = (
+        df_final[["Caballo", "Lic_caballo"]]
+        .drop_duplicates()
+        .assign(longitud=lambda x: x["Lic_caballo"].astype(str).str.len())
+        .sort_values("longitud", ascending=False)
+        .drop_duplicates(subset="Caballo")
+        .drop(columns="longitud")
+        .set_index("Caballo")
+    )
+
+    # 2. Reemplazar en el DataFrame original
+    df_final["Lic_jinete"] = df_final["Jinete"].map(lic_mas_larga_por_jinete["Lic_jinete"])
+    df_final["Lic_caballo"] = df_final["Caballo"].map(lic_mas_larga_por_caballo["Lic_caballo"])
+
+    df_final.to_csv(ruta_guardado_df_final)
+    
 # def extraccion_resultados_jinetes_caballos(driver, diccionario_jinetes, diccionario_caballos):
 
 #     siguiente_prueba_1 = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[2]/div[3]/div[6]/div/table/tbody/tr/td/a" # completo 

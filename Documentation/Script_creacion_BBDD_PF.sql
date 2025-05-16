@@ -47,7 +47,7 @@ dinero_premio FLOAT
 
 CREATE TABLE resultados_salto(
 id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado), 
-id_prueba INT REFERENCES pruebas(id_prueba), 
+id_disciplina INT REFERENCES disciplinas(id_disciplina), 
 puntos_obs_r1 FLOAT,
 puntos_tmp_r1 FLOAT,
 tiempo_r1 FLOAT,
@@ -61,7 +61,7 @@ tiempo_r3 FLOAT
 
 CREATE TABLE resultados_doma(
 id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),  
-id_prueba INT REFERENCES pruebas(id_prueba), 
+id_disciplina INT REFERENCES disciplinas(id_disciplina), 
 nota_juez_E INT,
 nota_juez_H INT,
 nota_juez_C INT,
@@ -72,7 +72,7 @@ nota INT
 
 CREATE TABLE resultados_completo(
 id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),
-id_prueba INT REFERENCES pruebas(id_prueba), 
+id_disciplina INT REFERENCES disciplinas(id_disciplina), 
 mer VARCHAR(50),
 puntos_doma FLOAT,
 tiempo_obs_cross FLOAT,

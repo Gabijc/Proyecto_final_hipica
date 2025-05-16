@@ -34,7 +34,7 @@ id_disciplina INT REFERENCES disciplinas(id_disciplina)
 );
 
 CREATE TABLE resultados(
-id_resultado SERIAL PRIMARY KEY,
+id_resultado INT PRIMARY KEY,
 id_jinete INT REFERENCES jinetes(id_jinete),
 id_caballo VARCHAR(50) REFERENCES caballos(id_caballo),
 id_prueba INT REFERENCES pruebas(id_prueba),  
@@ -45,9 +45,22 @@ premio BOOLEAN,
 dinero_premio FLOAT
 );
 
+CREATE TABLE resultados_salto(
+id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado), 
+id_disciplina INT REFERENCES disciplinas(id_disciplina), 
+puntos_obs_r1 FLOAT,
+puntos_tmp_r1 FLOAT,
+tiempo_r1 FLOAT,
+puntos_obs_r2 FLOAT,
+puntos_tmp_r2 FLOAT,
+tiempo_r2 FLOAT,
+puntos_obs_r3 FLOAT,
+puntos_tmp_r3 FLOAT,
+tiempo_r3 FLOAT
+);
 
 CREATE TABLE resultados_doma(
-id_resultado INT REFERENCES resultados(id_resultado) PRIMARY KEY ,  
+id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),  
 id_prueba INT REFERENCES resultados(id_prueba),  
 nota_juez_E INT,
 nota_juez_H INT,
@@ -59,7 +72,7 @@ nota INT
 
 CREATE TABLE resultados_completo(
 id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),
-id_prueba INT REFERENCES resultados(id_prueba),  
+id_prueba INT REFERENCES pruebas(id_prueba),  
 mer VARCHAR(50),
 puntos_doma FLOAT,
 tiempo_obs_cross FLOAT,
@@ -69,16 +82,3 @@ ptos_tiempo_salto FLOAT,
 ptos_total FLOAT,	
 );
 
-CREATE TABLE resultados_salto(
-id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),
-id_prueba INT REFERENCES resultados(id_prueba),  
-puntos_obs_r1 FLOAT,
-puntos_tmp_r1 FLOAT,
-tiempo_r1 FLOAT,
-puntos_obs_r2 FLOAT,
-puntos_tmp_r2 FLOAT,
-tiempo_r2 FLOAT,
-puntos_obs_r3 FLOAT,
-puntos_tmp_r3 FLOAT,
-tiempo_r3 FLOAT	
-);

@@ -61,7 +61,7 @@ tiempo_r3 FLOAT
 
 CREATE TABLE resultados_doma(
 id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),  
-id_prueba INT REFERENCES resultados(id_prueba),  
+id_disciplina INT REFERENCES disciplinas(id_disciplina), 
 nota_juez_E INT,
 nota_juez_H INT,
 nota_juez_C INT,
@@ -72,13 +72,13 @@ nota INT
 
 CREATE TABLE resultados_completo(
 id_resultado INT PRIMARY KEY REFERENCES resultados(id_resultado),
-id_prueba INT REFERENCES pruebas(id_prueba),  
+id_disciplina INT REFERENCES disciplinas(id_disciplina), 
 mer VARCHAR(50),
 puntos_doma FLOAT,
 tiempo_obs_cross FLOAT,
 tiempo_cross FLOAT,
 ptos_obs_salto FLOAT,
 ptos_tiempo_salto FLOAT,
-ptos_total FLOAT,	
+ptos_total FLOAT	
 );
 

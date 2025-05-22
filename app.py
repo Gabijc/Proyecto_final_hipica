@@ -113,6 +113,20 @@ query_pruebas = """
         GROUP BY tipo_prueba
         ORDER BY 2 DESC; 
 """
+def concursos_seleccionado(concursos):
+    # concursos es una lista de nombres de concursos
+    # Creamos un string con los concursos entre comillas y separados por coma
+    if not concursos:
+        return pd.DataFrame()
+    concursos_str = ', '.join([f"'{c}'" for c in concursos])
+    query = f""" 
+        SELECT *
+        FROM resultados r
+        JOIN pruebas p ON r.id_prueba = p.id_prueba
+        JOIN concursos c ON r.id_concurso = c.id_concurso
+        WHERE c.nombre_concurso IN ({concursos_str});
+    """
+    return pd.DataFrame(ejecutor_querys(cur, query))
 
 
 st.set_page_config(page_title = "Dashboard_hipica",
@@ -227,15 +241,20 @@ if page == "Análisis general":
                                 xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
                                 yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
                 st.plotly_chart(fig, use_container_width=True)
-                
+
     # Vista "Concursos"
     elif st.session_state.vista_general == "concursos":
-        seleccion_concurso = st.multiselect('Selecciona una o más opciones:',
-                                            list(pd.DataFrame(ejecutor_querys(cur, query_concursos))[0]))
+        nombres_concursos = [row[0] for row in ejecutor_querys(cur, """SELECT DISTINCT nombre_concurso FROM concursos c;""")]
+        seleccion_concurso = st.multiselect('Selecciona una o más opciones:',nombres_concursos)
         seleccion_inicio = st.multiselect('Selecciona una o más opciones:',
                                           list(pd.DataFrame(ejecutor_querys(cur, query_concursos))[1]))
         seleccion_fin = st.multiselect('Selecciona una o más opciones:',
                                        list(pd.DataFrame(ejecutor_querys(cur, query_concursos))[2]))
+        
+        if seleccion_concurso:
+            df = concursos_seleccionado(seleccion_concurso)
+            st.write(df) 
+
         # Puedes agregar filtros o análisis adicionales aquí
 
 elif page == "Análisis de binomios":

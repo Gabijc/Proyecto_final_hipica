@@ -115,6 +115,13 @@ query_pruebas = """
         GROUP BY tipo_prueba
         ORDER BY 2 DESC; 
 """
+
+query_jinetes = """ 
+        SELECT DISTINCT nombre_jinete
+        FROM jinetes
+"""
+
+lista_nombres = [tupla[0] for tupla in ejecutor_querys(cur, query_jinetes)]
 def concursos_seleccionado(elementos, coso = 'info_concursos'):
     
     if coso == "info_concursos":
@@ -122,11 +129,16 @@ def concursos_seleccionado(elementos, coso = 'info_concursos'):
                 return pd.DataFrame()
         concursos_str = ', '.join([f"'{c}'" for c in elementos])
         query = f""" 
-                SELECT *
+                SELECT 
+                    c.nombre_concurso,
+                    p.nombre_prueba,
+                    p.fecha_prueba
                 FROM resultados r
                 JOIN pruebas p ON r.id_prueba = p.id_prueba
                 JOIN concursos c ON r.id_concurso = c.id_concurso
-                WHERE c.nombre_concurso IN ({concursos_str});
+                WHERE c.nombre_concurso IN ({concursos_str})
+                GROUP BY c.nombre_concurso, p.nombre_prueba, p.fecha_prueba
+                ORDER BY 3;
         """
         return pd.DataFrame(ejecutor_querys(cur, query))
     
@@ -374,11 +386,8 @@ if page == "Análisis general":
 elif page == "Análisis de binomios":
     st.title("Análisis de binomios")
 
-    # Lista de jinetes (deberías obtenerla dinámicamente, por ejemplo con una función o consulta)
-    nombres_jinetes = ["hugo álvarez amaro", "otro jinete", "etc."]
-
     # Selección del jinete
-    jinete_seleccionado = st.selectbox("Selecciona un jinete:", nombres_jinetes, key="jinete")
+    jinete_seleccionado = st.selectbox("Selecciona un jinete:", lista_nombres, key="jinete")
 
     if jinete_seleccionado:
         # Obtengo la lista de caballos del jinete
@@ -401,7 +410,7 @@ elif page == "Análisis de binomios":
                     col7.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
                     col8.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
 
-                df = info_jinete_caballo('hugo álvarez amaro', 'casaspezia')[-1]
+                df = info_jinete_caballo(jinete, caballo)[-1]
                 colores = ['#4c78a8', '#54a24b']
                 estado_counts = df['estado'].value_counts().reset_index()
                 estado_counts.columns = ['estado', 'count']

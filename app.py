@@ -315,3 +315,5 @@ elif page == "Análisis de binomios":
 
 elif page == "Acceso a resultados":
     st.title("Acceso a resultados")
+
+

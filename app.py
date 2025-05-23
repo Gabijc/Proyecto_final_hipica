@@ -279,7 +279,7 @@ st.set_page_config(page_title = "Dashboard_hipica",
 
 st.sidebar.title("Navegación de páginas")
 page = st.sidebar.radio(label="Selecciona una página",
-                        options=["Análisis general", "Análisis de binomios", "Acceso a resultados"])
+                        options=["Análisis general", "Análisis de binomios"])
 
 # Inicializamos estado
 if "vista_general" not in st.session_state:
@@ -399,25 +399,47 @@ elif page == "Análisis de binomios":
             if caballo_seleccionado:
                 # Llamo a la función pasando los nombres seleccionados
                 jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio = info_jinete_caballo(jinete_seleccionado, caballo_seleccionado)
+                df = info_jinete_caballo(jinete, caballo)[-1]
 
                 with st.container():
-                    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
+                    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
                     col1.metric("Jinete", f"{jinete}", border=True)
                     col2.metric("Caballo", f"{caballo}", border=True)
                     col3.metric("Edad caballo", f"{edad_caballo}", border=True)
-                    col5.metric("Numero de concursos", f"{n_concursos}", border=True)
-                    col6.metric("Alturas competidas", f"{alturas_buenas}", border=True)
-                    col7.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
-                    col8.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
+                    col4.metric("Numero de concursos", f"{n_concursos}", border=True)
+                    col5.metric("Alturas competidas", f"{alturas_buenas}", border=True)
+                    col6.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
+                    col7.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
+                
+                with st.container():
+                    col1, col2 = st.columns([1.5, 1.5])
+                    with col1:
+                        colores = ['#4c78a8', '#54a24b']
+                        estado_counts = df['estado'].value_counts().reset_index()
+                        estado_counts.columns = ['estado', 'count']
+                        fig = px.pie(estado_counts, values="count", names="estado", title='Porcentaje de finalización pruebas', color_discrete_sequence=colores)
+                        fig.update_traces(textinfo='percent', textfont_color='white')
+                        fig.update_layout(width=600, height=400, title_x=0.5, title_font=dict(size = 16, weight='bold'))
+                        st.plotly_chart(fig, use_container_width=True)
+                    with col2: 
 
-                df = info_jinete_caballo(jinete, caballo)[-1]
-                colores = ['#4c78a8', '#54a24b']
-                estado_counts = df['estado'].value_counts().reset_index()
-                estado_counts.columns = ['estado', 'count']
-                fig = px.pie(estado_counts, values="count", names="estado", title='Porcentaje de finalización pruebas', color_discrete_sequence=colores)
-                fig.update_traces(textinfo='percent', textfont_color='white')
-                fig.update_layout(width=600, height=400, title_x=0.5, title_font=dict(size = 16, weight='bold'))
-                st.plotly_chart(fig, use_container_width=True)
+                        filtered_df = df[(df['jinete'] == jinete) & (df['caballo'] == caballo)].copy()
+
+                        # Ensure 'fecha_prueba' is in datetime format
+                        filtered_df['fecha_prueba'] = pd.to_datetime(filtered_df['fecha_prueba'])
+
+                        if not filtered_df.empty:
+                            fig = px.line(
+                                filtered_df,
+                                x='fecha_prueba',
+                                y='puesto',
+                                hover_data=['prueba', 'concurso', 'estado', 'puesto'],
+                                title=f'Puesto de {jinete} con {caballo} Over Time')
+                            fig.update_layout(
+                                xaxis_title='Fecha de la Prueba',
+                                yaxis_title='Puesto')
+                            st.plotly_chart(fig, use_container_width=True)
+
                 # Aquí puedes añadir más análisis o gráficos con la variable 'binomio' (DataFrame)
                 st.write(df) 
             else:
@@ -428,9 +450,5 @@ elif page == "Análisis de binomios":
         st.info("Selecciona un jinete para ver sus caballos.")
 
 
-
-
-elif page == "Acceso a resultados":
-    st.title("Acceso a resultados")
 
 

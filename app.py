@@ -113,20 +113,31 @@ query_pruebas = """
         GROUP BY tipo_prueba
         ORDER BY 2 DESC; 
 """
-def concursos_seleccionado(concursos):
-    # concursos es una lista de nombres de concursos
-    # Creamos un string con los concursos entre comillas y separados por coma
-    if not concursos:
-        return pd.DataFrame()
-    concursos_str = ', '.join([f"'{c}'" for c in concursos])
-    query = f""" 
-        SELECT *
-        FROM resultados r
-        JOIN pruebas p ON r.id_prueba = p.id_prueba
-        JOIN concursos c ON r.id_concurso = c.id_concurso
-        WHERE c.nombre_concurso IN ({concursos_str});
-    """
-    return pd.DataFrame(ejecutor_querys(cur, query))
+def concursos_seleccionado(elementos, coso = 'info_concursos'):
+    
+    if coso == "info_concursos":
+        if not elementos:
+                return pd.DataFrame()
+        concursos_str = ', '.join([f"'{c}'" for c in elementos])
+        query = f""" 
+                SELECT *
+                FROM resultados r
+                JOIN pruebas p ON r.id_prueba = p.id_prueba
+                JOIN concursos c ON r.id_concurso = c.id_concurso
+                WHERE c.nombre_concurso IN ({concursos_str});
+        """
+        return pd.DataFrame(ejecutor_querys(cur, query))
+    
+    elif coso == "jinetes":
+        query = f""" 
+            SELECT 
+                DISTINCT c.nombre_caballo
+            FROM resultados r
+                JOIN caballos c ON r.id_caballo = c.id_caballo
+                JOIN jinetes j ON r.id_jinete = j.id_jinete
+            WHERE j.nombre_jinete = '{elementos}';
+        """
+        return pd.DataFrame(ejecutor_querys(cur, query))
 
 
 st.set_page_config(page_title = "Dashboard_hipica",
@@ -257,8 +268,50 @@ if page == "Análisis general":
 
         # Puedes agregar filtros o análisis adicionales aquí
 
+
 elif page == "Análisis de binomios":
     st.title("Análisis de binomios")
+
+    with st.container():
+        col1, col2 = st.columns(2)
+
+        with col1:
+            nombres_jinetes = ["hugo álvarez amaro", "otro jinete", "etc."]
+            jinete_seleccionado_col1 = st.selectbox("Selecciona un jinete:", nombres_jinetes, key="jinete_col1")
+
+            if jinete_seleccionado_col1:
+                caballos_jinete_df = concursos_seleccionado(jinete_seleccionado_col1, 'jinetes')
+                if not caballos_jinete_df.empty:
+                    lista_caballos = caballos_jinete_df[0].tolist()
+                    caballos_seleccionados_col1 = st.multiselect("Caballos del jinete:", lista_caballos, key="caballos_col1")
+                    if caballos_seleccionados_col1:
+                        st.write("Caballos seleccionados:", caballos_seleccionados_col1)
+                    else:
+                        st.info("Selecciona al menos un caballo.")
+                else:
+                    st.info(f"No se encontraron caballos para el jinete: {jinete_seleccionado_col1}")
+            else:
+                st.info("Selecciona un jinete para ver sus caballos.")
+
+        with col2:
+            nombres_jinetes = ["hugo álvarez amaro", "otro jinete", "etc."]
+            jinete_seleccionado_col2 = st.selectbox("Selecciona un jinete:", nombres_jinetes, key="jinete_col2")
+
+            if jinete_seleccionado_col2:
+                caballos_jinete_df = concursos_seleccionado(jinete_seleccionado_col2, 'jinetes')
+                if not caballos_jinete_df.empty:
+                    lista_caballos = caballos_jinete_df[0].tolist()
+                    caballos_seleccionados_col2 = st.multiselect("Caballos del jinete:", lista_caballos, key="caballos_col2")
+                    if caballos_seleccionados_col2:
+                        st.write("Caballos seleccionados:", caballos_seleccionados_col2)
+                    else:
+                        st.info("Selecciona al menos un caballo.")
+                else:
+                    st.info(f"No se encontraron caballos para el jinete: {jinete_seleccionado_col2}")
+            else:
+                st.info("Selecciona un jinete para ver sus caballos.")
+
+
 
 elif page == "Acceso a resultados":
     st.title("Acceso a resultados")

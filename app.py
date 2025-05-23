@@ -3,6 +3,8 @@ import pandas as pd
 import psycopg2 as ps  # type: ignore
 import plotly.express as px  # type: ignore
 import plotly.graph_objects as go  # type: ignore
+import numpy as np
+import re
 
 def conexion_BBDD(nombre_BBDD, usuario, contraseña, anfitrion, puerto):
 
@@ -139,6 +141,107 @@ def concursos_seleccionado(elementos, coso = 'info_concursos'):
         """
         return pd.DataFrame(ejecutor_querys(cur, query))
 
+def extraer_altura_y_edad(texto):
+    altura = None
+    edad = None
+
+    match_altura = re.search(r'(\d{1,2}[,.]\d{2})\s?(?:m\.?)?', texto)
+    if match_altura:
+        altura = match_altura.group(1).replace(',', '.')
+
+    match_edad = re.search(r'\b([5-8])\s?años\b', texto, flags=re.IGNORECASE)
+    if match_edad:
+        edad = f"{match_edad.group(1)} años"
+
+    return altura, edad
+
+def info_jinete_caballo(jinete_entrada, caballo_entrada):
+    query_prueba = f""" 
+            SELECT 
+                j.nombre_jinete,
+                c.nombre_caballo,
+                rs.puntos_obs_r1,
+                rs.puntos_tmp_r1,
+                rs.tiempo_r1,
+                rs.puntos_obs_r2,
+                rs.puntos_tmp_r2,
+                rs.tiempo_r2,
+                rs.puntos_obs_r3,
+                rs.puntos_tmp_r3,
+                rs.tiempo_r3,
+                p.nombre_prueba,
+                co.nombre_concurso,
+                r.estado,
+                p.fecha_prueba,
+                r.puesto
+            FROM resultados r
+                JOIN caballos c ON r.id_caballo = c.id_caballo
+                JOIN jinetes j ON r.id_jinete = j.id_jinete
+                JOIN resultados_salto rs ON r.id_resultado = rs.id_resultado
+                JOIN pruebas p ON r.id_prueba = p.id_prueba
+                JOIN concursos co ON r.id_concurso = co.id_concurso
+            WHERE j.nombre_jinete = '{jinete_entrada}' AND c.nombre_caballo = '{caballo_entrada}';
+    """
+    binomio = pd.DataFrame(ejecutor_querys(cur, query_prueba)).rename(columns = {0: 'jinete', 1: 'caballo', 2: 'puntos_obs_r1', 3: 'puntos_tmp_r1', 4: 'tiempo_r1',
+                                                                    5: 'puntos_obs_r2', 6: 'puntos_tmp_r2', 7: 'tiempo_r2',
+                                                                    8: 'puntos_obs_r3', 9: 'puntos_tmp_r3', 10: 'tiempo_r3',
+                                                                    11: 'prueba', 12: 'concurso', 13: 'estado', 14: 'fecha_prueba', 15: 'puesto'})
+    # METRICAS
+    n_concursos = len(binomio['concurso'].unique()) # numero de concursos en los que el caballo ha competido con el jinete seleccionado
+    # n_caballos_corridos = len(caballos) # numero de cabllos que el jinete seleccionado corre actualmente/ha corrido este año
+    porcentaje_recorridos_finalizados = round(len(binomio[binomio["estado"] == "FIN"])/len(binomio) * 100, 2) # porcentaje de pruebas finalizadas
+
+    tipos_pruebas_altura = binomio['prueba'].apply(extraer_altura_y_edad)
+    alturas = []
+    edad = []
+    for elemento in tipos_pruebas_altura:
+        if pd.notna(elemento[0]):
+            alturas.append(elemento[0])
+        if pd.notna(elemento[1]):
+            edad.append(elemento[1])
+        else:
+            continue
+    alturas_buenas = list(set(alturas)) # alturas en las que el jinete ha competido con el caballo seleccionado
+    edad_bueno = list(set(edad)) # si es caballo joven o no 
+
+
+    tiempos = binomio[['tiempo_r1', 'tiempo_r2', 'tiempo_r3']].apply(pd.to_numeric, errors='coerce')
+    promedio_tiempo = round(tiempos.stack().mean(), 2) # promedio de tiempo que realiza el caballo en un recorrido
+
+    # Solo filas con estado FIN (salida a pista válida)
+    df_fin = binomio[binomio['estado'] == 'FIN']
+
+    # Vamos a revisar todas las rondas para contar las salidas y calcular puntos
+    rondas = ['r1', 'r2', 'r3']
+
+    # Creamos listas para guardar resultados de cada salida a pista (cada ronda válida)
+    salidas_pista = []
+
+    for _, fila in df_fin.iterrows():
+        for r in rondas:
+            p_obs = fila[f'puntos_obs_{r}']
+            p_tmp = fila[f'puntos_tmp_{r}']
+            tiempo = fila[f'tiempo_{r}']
+            
+            # Comprobar si salió a pista: alguna de estas 3 columnas tiene un valor numérico válido
+            if pd.notna(p_obs) or pd.notna(p_tmp) or pd.notna(tiempo):
+                # Asegurarnos que p_obs sea número, sino 0 para contar correctamente
+                p_obs_val = p_obs if pd.notna(p_obs) else 0
+                salidas_pista.append(p_obs_val)
+
+    # Número de salidas a pista
+    num_salidas = len(salidas_pista) # numero de recorridos/salidas a pista que ha realizado el cabllo con el jinete seleccionado
+
+    # Promedio de puntos en obstáculos por salida
+    promedio_puntos_obs = round(np.mean(salidas_pista)) # promedio de puntos de obstaculos que realiza el caballo en una salida a pista 
+
+    # Porcentaje de salidas con 0 puntos en obstáculos
+    veces_cero = sum(1 for x in salidas_pista if x == 0) # numero de veces que el caballo ha hecho cero puntos en obstaculos
+    promedio_veces_cero = (veces_cero / num_salidas if num_salidas > 0 else np.nan)*100
+    jinete = binomio['jinete'].unique()[0]
+    caballo = binomio['caballo'].unique()[0]
+    edad_caballo = edad_bueno[0] if edad_bueno else "No joven"
+    return jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio
 
 st.set_page_config(page_title = "Dashboard_hipica",
                     page_icon="🐎",
@@ -268,48 +371,53 @@ if page == "Análisis general":
 
         # Puedes agregar filtros o análisis adicionales aquí
 
-
 elif page == "Análisis de binomios":
     st.title("Análisis de binomios")
 
-    with st.container():
-        col1, col2 = st.columns(2)
+    # Lista de jinetes (deberías obtenerla dinámicamente, por ejemplo con una función o consulta)
+    nombres_jinetes = ["hugo álvarez amaro", "otro jinete", "etc."]
 
-        with col1:
-            nombres_jinetes = ["hugo álvarez amaro", "otro jinete", "etc."]
-            jinete_seleccionado_col1 = st.selectbox("Selecciona un jinete:", nombres_jinetes, key="jinete_col1")
+    # Selección del jinete
+    jinete_seleccionado = st.selectbox("Selecciona un jinete:", nombres_jinetes, key="jinete")
 
-            if jinete_seleccionado_col1:
-                caballos_jinete_df = concursos_seleccionado(jinete_seleccionado_col1, 'jinetes')
-                if not caballos_jinete_df.empty:
-                    lista_caballos = caballos_jinete_df[0].tolist()
-                    caballos_seleccionados_col1 = st.multiselect("Caballos del jinete:", lista_caballos, key="caballos_col1")
-                    if caballos_seleccionados_col1:
-                        st.write("Caballos seleccionados:", caballos_seleccionados_col1)
-                    else:
-                        st.info("Selecciona al menos un caballo.")
-                else:
-                    st.info(f"No se encontraron caballos para el jinete: {jinete_seleccionado_col1}")
+    if jinete_seleccionado:
+        # Obtengo la lista de caballos del jinete
+        caballos_jinete_df = concursos_seleccionado(jinete_seleccionado, 'jinetes')
+        if not caballos_jinete_df.empty:
+            lista_caballos = caballos_jinete_df[0].tolist()
+            caballo_seleccionado = st.selectbox("Selecciona un caballo:", lista_caballos, key="caballo")
+
+            if caballo_seleccionado:
+                # Llamo a la función pasando los nombres seleccionados
+                jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio = info_jinete_caballo(jinete_seleccionado, caballo_seleccionado)
+
+                with st.container():
+                    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
+                    col1.metric("Jinete", f"{jinete}", border=True)
+                    col2.metric("Caballo", f"{caballo}", border=True)
+                    col3.metric("Edad caballo", f"{edad_caballo}", border=True)
+                    col5.metric("Numero de concursos", f"{n_concursos}", border=True)
+                    col6.metric("Alturas competidas", f"{alturas_buenas}", border=True)
+                    col7.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
+                    col8.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
+
+                df = info_jinete_caballo('hugo álvarez amaro', 'casaspezia')[-1]
+                colores = ['#4c78a8', '#54a24b']
+                estado_counts = df['estado'].value_counts().reset_index()
+                estado_counts.columns = ['estado', 'count']
+                fig = px.pie(estado_counts, values="count", names="estado", title='Porcentaje de finalización pruebas', color_discrete_sequence=colores)
+                fig.update_traces(textinfo='percent', textfont_color='white')
+                fig.update_layout(width=600, height=400, title_x=0.5, title_font=dict(size = 16, weight='bold'))
+                st.plotly_chart(fig, use_container_width=True)
+                # Aquí puedes añadir más análisis o gráficos con la variable 'binomio' (DataFrame)
+                st.write(df) 
             else:
-                st.info("Selecciona un jinete para ver sus caballos.")
+                st.info("Selecciona un caballo para continuar.")
+        else:
+            st.info(f"No se encontraron caballos para el jinete: {jinete_seleccionado}")
+    else:
+        st.info("Selecciona un jinete para ver sus caballos.")
 
-        with col2:
-            nombres_jinetes = ["hugo álvarez amaro", "otro jinete", "etc."]
-            jinete_seleccionado_col2 = st.selectbox("Selecciona un jinete:", nombres_jinetes, key="jinete_col2")
-
-            if jinete_seleccionado_col2:
-                caballos_jinete_df = concursos_seleccionado(jinete_seleccionado_col2, 'jinetes')
-                if not caballos_jinete_df.empty:
-                    lista_caballos = caballos_jinete_df[0].tolist()
-                    caballos_seleccionados_col2 = st.multiselect("Caballos del jinete:", lista_caballos, key="caballos_col2")
-                    if caballos_seleccionados_col2:
-                        st.write("Caballos seleccionados:", caballos_seleccionados_col2)
-                    else:
-                        st.info("Selecciona al menos un caballo.")
-                else:
-                    st.info(f"No se encontraron caballos para el jinete: {jinete_seleccionado_col2}")
-            else:
-                st.info("Selecciona un jinete para ver sus caballos.")
 
 
 

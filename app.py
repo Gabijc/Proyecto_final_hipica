@@ -120,6 +120,28 @@ query_jinetes = """
         SELECT DISTINCT nombre_jinete
         FROM jinetes
 """
+query_caballos = """
+        
+        SELECT 
+            DISTINCT COUNT(id_caballo)
+        FROM caballos; 
+"""
+query_jinetes_recuento = """
+        
+        SELECT 
+            DISTINCT COUNT(id_jinete)
+        FROM jinetes; 
+"""
+
+
+query_categorias = """
+        SELECT 
+            categoria_concurso,
+            COUNT(id_concurso)
+        FROM concursos c
+        GROUP BY categoria_concurso
+        ORDER BY 1 DESC;
+"""
 
 lista_nombres = [tupla[0] for tupla in ejecutor_querys(cur, query_jinetes)]
 def concursos_seleccionado(elementos, coso = 'info_concursos'):
@@ -300,11 +322,13 @@ if page == "Análisis general":
     # Vista "Inicio"
     if st.session_state.vista_general == "inicio":
         with st.container():
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5, col6 = st.columns(6)
             col1.metric("Nº concursos", f"{ejecutor_querys(cur, query_n_concursos)[0][0]}", border=True)
             col2.metric("Tipos_pruebas", f"{len(ejecutor_querys(cur, query_pruebas))}", border=True)
             col3.metric("Duracion_media_concuros", f"{ejecutor_querys(cur, query_duracion_concursos)[0][0]}", border=True)
             col4.metric("Pruebas_concurso", "9", border=True)
+            col5.metric("Nº jinetes", f"{ejecutor_querys(cur, query_jinetes_recuento)[0][0]}", border=True)
+            col6.metric("Nº caballos", f"{ejecutor_querys(cur, query_caballos)[0][0]}", border=True)
 
         with st.container():
             col1, col2 = st.columns([1.5, 1.5])
@@ -345,10 +369,10 @@ if page == "Análisis general":
                 concursos = pd.DataFrame(concursos_provincias)
                 concursos[2] = round((concursos[1] / concursos[1].sum()) * 100, 2)
                 df_provincias = pd.DataFrame(concursos_provincias, columns=['Provincia', 'Nº concursos'])
-                fig = px.bar(df_provincias, x='Provincia', y='Nº concursos', title="Concursos por provincia")
+                fig = px.bar(df_provincias, x='Nº concursos', y='Provincia', title="Concursos por provincia")
                 fig.update_layout(
-                        width=800,
-                        height=400,
+                        width=10,
+                        height=800,
                         title_font=dict(size=15, weight='bold'),
                         title_x=0.5,
                         xaxis_title=dict(text='Provincia', font=dict(size=12, weight='bold')),
@@ -356,7 +380,7 @@ if page == "Análisis general":
                 st.plotly_chart(fig, use_container_width=True)
 
             with col2:
-                tipos_pruebas = pd.DataFrame(ejecutor_querys(cur, query_pruebas))
+                tipos_pruebas = pd.DataFrame(ejecutor_querys(cur, query_pruebas)).head(5)
                 tipos_pruebas["prueba"] = tipos_pruebas[0].apply(lambda x: prueba_norma.get(x) + ' ' + x)
                 fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas")
                 fig.update_layout(
@@ -367,6 +391,19 @@ if page == "Análisis general":
                                 xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
                                 yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
                 st.plotly_chart(fig, use_container_width=True)
+            
+            with st.container():
+                concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias))
+                fig = px.bar(concursos_categorias, x = 0, y = 1, title = "Concursos por categoria")
+                fig.update_layout(
+                                width=800, 
+                                height=400,
+                                title_font=dict(size = 15, weight='bold'),
+                                title_x=0.5,
+                                xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
+                st.plotly_chart(fig, use_container_width=True)
+
 
     # Vista "Concursos"
     elif st.session_state.vista_general == "concursos":

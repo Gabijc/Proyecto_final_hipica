@@ -5,6 +5,7 @@ import plotly.express as px  # type: ignore
 import plotly.graph_objects as go  # type: ignore
 import numpy as np
 import re
+from datetime import date
 
 def conexion_BBDD(nombre_BBDD, usuario, contraseña, anfitrion, puerto):
 
@@ -287,7 +288,7 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     edad_caballo = edad_bueno[0] if edad_bueno else "No joven"
     return jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio
 
-def graficos_provincias (provincia, grafico_buscado):
+def graficos_provincias (provincia, grafico_buscado, filtro = None):
 
     if grafico_buscado == 'ambitos':
         query_concursos_ambito_provincia = f"""
@@ -370,21 +371,48 @@ def graficos_provincias (provincia, grafico_buscado):
                 SELECT 
                         DISTINCT s.categoria_concurso,
                         COUNT( DISTINCT s.id_concurso),
-                        SUM(r.dinero_premio)
+                        SUM(r.dinero_premio),
+                        COUNT(DISTINCT (r.id_jinete, r.id_caballo))
                 FROM seleccion_provincia s
                     JOIN resultados r on s.id_concurso = r.id_concurso
                 GROUP BY DISTINCT s.categoria_concurso;
         """
-        # return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
-        fig = px.bar(pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)), x = 0, y = 1, title = "Concursos por categoria")
-        fig.update_layout(
-                                    width=800, 
-                                    height=400,
-                                    title_font=dict(size = 15, weight='bold'),
-                                    title_x=0.5,
-                                    xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
-                                    yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
-        st.plotly_chart(fig, use_container_width=True)
+
+        if filtro == 'Concursos por categoría':
+            # return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+            fig = px.bar(pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)), x = 0, y = 1, title = "Concursos por categoria")
+            fig.update_layout(
+                                        width=800, 
+                                        height=400,
+                                        title_font=dict(size = 15, weight='bold'),
+                                        title_x=0.5,
+                                        xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                        yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
+            st.plotly_chart(fig, use_container_width=True)
+
+        if filtro == 'Dinero por categoría':
+            # return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+            fig = px.bar(pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)), x = 0, y = 2, title = "Concursos por categoria")
+            fig.update_layout(
+                                        width=800, 
+                                        height=400,
+                                        title_font=dict(size = 15, weight='bold'),
+                                        title_x=0.5,
+                                        xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                        yaxis_title=dict(text='Dinero repartido', font=dict(size = 12, weight='bold')))
+            st.plotly_chart(fig, use_container_width=True)
+
+        if filtro == 'Binomios por categoría':
+            # return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+            fig = px.bar(pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)), x = 0, y = 3, title = "Concursos por categoria")
+            fig.update_layout(
+                                        width=800, 
+                                        height=400,
+                                        title_font=dict(size = 15, weight='bold'),
+                                        title_x=0.5,
+                                        xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                        yaxis_title=dict(text='Nº binomios', font=dict(size = 12, weight='bold')))
+            st.plotly_chart(fig, use_container_width=True)
 
 st.set_page_config(page_title = "Dashboard_hipica",
                     page_icon="🐎",
@@ -522,24 +550,110 @@ if page == "Análisis general":
             graficos_provincias(seleccion_provincia, "temporal")
             graficos_provincias(seleccion_provincia, "ambitos")
             st.write(graficos_provincias(seleccion_provincia, "localidades"))
-            graficos_provincias(seleccion_provincia, "categorias")
-
+            with st.container():
+                col1, col2 = st.columns([0.5, 3])
+                with col1:
+                    seleccion_filtro = st.selectbox("Filtros",  ["Concursos por categoría", "Dinero por categoría", "Binomios por categoría"])
+                with col2:
+                    graficos_provincias(seleccion_provincia, "categorias", seleccion_filtro)
 
 
     # Vista "Concursos"
     elif st.session_state.vista_general == "concursos":
-        nombres_concursos = [row[0] for row in ejecutor_querys(cur, """SELECT DISTINCT nombre_concurso FROM concursos c;""")]
-        seleccion_concurso = st.multiselect('Selecciona una o más opciones:',nombres_concursos)
-        seleccion_inicio = st.multiselect('Selecciona una o más opciones:',
-                                          list(pd.DataFrame(ejecutor_querys(cur, query_concursos))[1]))
-        seleccion_fin = st.multiselect('Selecciona una o más opciones:',
-                                       list(pd.DataFrame(ejecutor_querys(cur, query_concursos))[2]))
+        # Inicializar vista_concurso si no está en session_state
+        if "vista_concurso" not in st.session_state:
+            st.session_state.vista_concurso = "lista_pruebas"
         
-        if seleccion_concurso:
-            df = concursos_seleccionado(seleccion_concurso)
-            st.write(df) 
+        # Rango mínimo y máximo del slider
+        fecha_inicio = date(2025, 1, 1)
+        fecha_fin = date(2025, 4, 30)
 
-        # Puedes agregar filtros o análisis adicionales aquí
+        # Slider con dos fechas
+        rango_fechas = st.slider(
+            "Selecciona un rango de fechas",
+            min_value=fecha_inicio,
+            max_value=fecha_fin,
+            value=(date(2025, 1, 1), date(2025, 4, 30)),
+            format="DD/MM/YYYY"
+        )
+
+        st.write("Rango de fechas seleccionado:")
+        st.write("Desde:", rango_fechas[0])
+        st.write("Hasta:", rango_fechas[1])
+
+        # Obtener lista de concursos disponibles
+        nombres_concursos = [row[0] for row in ejecutor_querys(cur, f""" SELECT DISTINCT nombre_concurso FROM concursos WHERE fecha_inicio_concurso >= '{rango_fechas[0]}' AND fecha_fin_concurso <= '{rango_fechas[1]}';""")]
+        seleccion_concurso = st.multiselect("Selecciona uno o más concursos:", nombres_concursos)
+
+        if seleccion_concurso:
+            # Obtener las pruebas del/los concurso/s seleccionados
+            df = concursos_seleccionado(seleccion_concurso)
+
+            if st.session_state.vista_concurso == "lista_pruebas":
+                st.write("### Pruebas disponibles")
+                st.write(df)
+
+                # Crear opciones legibles para el selectbox
+                opciones_pruebas = [
+                    f"{row[1]} - {row[2]} - {row[0]}"
+                    for _, row in df.iterrows()
+                ]
+
+                seleccion = st.selectbox("Selecciona una prueba:", opciones_pruebas, index=None)
+
+                # Botón para confirmar selección
+                if seleccion and st.button("Ver resultados de esta prueba"):
+                    fila = df.loc[
+                        df.apply(lambda r: f"{r[1]} - {r[2]} - {r[0]}", axis=1) == seleccion
+                    ].iloc[0]
+
+                    st.session_state.prueba_seleccionada = {
+                        "nombre_prueba": fila[1],
+                        "nombre_concurso": fila[0],
+                        "fecha_prueba": fila[2]
+                    }
+                    st.session_state.vista_concurso = "resultados"
+
+            elif st.session_state.vista_concurso == "resultados":
+                prueba = st.session_state.prueba_seleccionada
+
+                st.write(f"## Resultados de la prueba '{prueba['nombre_prueba']}' con fecha {prueba['fecha_prueba']} para el concurso '{prueba['nombre_concurso']}'")
+
+                query_resultados = f"""
+                    SELECT 
+                        r.estado,
+                        r.puesto,
+                        j.nombre_jinete,
+                        co.nombre_caballo,
+                        rs.puntos_obs_r1,
+                        rs.puntos_tmp_r1,
+                        rs.tiempo_r1,
+                        rs.puntos_obs_r2,
+                        rs.puntos_tmp_r2,
+                        rs.tiempo_r2,
+                        rs.puntos_obs_r3,
+                        rs.puntos_tmp_r3,
+                        rs.tiempo_r3
+                    FROM resultados r
+                        JOIN pruebas p ON r.id_prueba = p.id_prueba
+                        JOIN concursos c ON r.id_concurso = c.id_concurso
+                        JOIN jinetes j ON r.id_jinete = j.id_jinete
+                        JOIN caballos co ON r.id_caballo = co.id_caballo
+                        JOIN resultados_salto rs ON r.id_resultado = rs.id_resultado
+                    WHERE p.nombre_prueba = '{prueba["nombre_prueba"]}' AND p.fecha_prueba = DATE '{prueba["fecha_prueba"]}' AND c.nombre_concurso = '{prueba['nombre_concurso']}';
+                """
+
+                resultados_df = pd.DataFrame(ejecutor_querys(cur, query_resultados))
+
+                # Mostrar tabla de resultados
+                st.dataframe(resultados_df, use_container_width=True)
+
+                # Botón para volver a lista de pruebas
+                if st.button("Volver a lista de pruebas"):
+                    st.session_state.vista_concurso = "lista_pruebas"
+                    st.session_state.prueba_seleccionada = None
+
+
 
 elif page == "Análisis de binomios":
     st.title("Análisis de binomios")

@@ -80,6 +80,16 @@ query_concursos_ambito = """
         ORDER BY COUNT(id_concurso) DESC;
 """
 
+query_concursos_ambito_provincia = """
+        SELECT 
+                ambito_concurso,
+                CONCAT((COUNT(id_concurso)) * 100 / (SELECT COUNT(id_concurso) FROM concursos c), ' ', '%')
+        FROM concursos c
+        GROUP BY ambito_concurso
+        WHERE provincia_concurso = 'Madrid'
+        ORDER BY COUNT(id_concurso) DESC;
+"""
+
 query_concursos_provincia = """
         SELECT 
                 provincia_concurso,
@@ -277,6 +287,105 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     edad_caballo = edad_bueno[0] if edad_bueno else "No joven"
     return jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio
 
+def graficos_provincias (provincia, grafico_buscado):
+
+    if grafico_buscado == 'ambitos':
+        query_concursos_ambito_provincia = f"""
+
+                WITH seleccion_provincia AS (
+                    SELECT *
+                    FROM concursos
+                    WHERE provincia_concurso = '{provincia}'
+                )
+                SELECT 
+                    ambito_concurso,
+                    CONCAT((COUNT(id_concurso)) * 100 / (SELECT COUNT(id_concurso) FROM seleccion_provincia), ' ', '%')
+                FROM seleccion_provincia
+                GROUP BY ambito_concurso
+                ORDER BY COUNT(id_concurso) DESC;
+        """
+        df = pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+        df[1] = df[1].str.replace('%', '').str.strip().astype(int)
+        colores = ['#4c78a8', '#54a24b']
+        fig2 = px.pie(df, values=1, names=0, title='Porcentaje de concursos por ámbito', color_discrete_sequence=colores)
+        fig2.update_traces(textinfo='percent', textfont_color='white')
+        fig2.update_layout(width=600, 
+                                    height=400, 
+                                    title_x=0.5, 
+                                    title_font=dict(size=16, weight='bold'))
+        st.plotly_chart(fig2, use_container_width=True)
+
+    elif grafico_buscado == 'temporal':
+        query_concursos_ambito_provincia = f"""
+                WITH seleccion_provincia AS (
+                    SELECT *
+                    FROM concursos
+                    WHERE provincia_concurso = '{provincia}'
+                )
+                SELECT 
+                        EXTRACT(MONTH FROM fecha_inicio_concurso),
+                        COUNT(id_concurso)
+                FROM seleccion_provincia
+                GROUP BY EXTRACT(MONTH FROM fecha_inicio_concurso)
+                ORDER BY COUNT(id_concurso) DESC;
+        """
+        df = pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)).sort_values(by=0, ascending=True)
+        df[0] = df[0].apply(lambda x: meses[int(x)])
+        fig1 = px.bar(df, x=0, y=1, title='Concursos por mes')
+        fig1.update_traces(width=0.2)
+        fig1.update_layout(
+                width=800, 
+                height=400,
+                title_font=dict(size = 15, weight='bold'),
+                title_x=0.5,
+                xaxis_title=dict(text='Provincia', font=dict(size = 12, weight='bold')),
+                yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold'))
+            )
+        st.plotly_chart(fig1, use_container_width=True)
+
+    elif grafico_buscado == 'localidades':
+        query_concursos_ambito_provincia = f"""
+                WITH seleccion_provincia AS (
+                    SELECT *
+                    FROM concursos
+                    WHERE provincia_concurso = '{provincia}'
+                )
+                SELECT 
+                        DISTINCT s.localidad_concurso,
+                        COUNT(s.id_concurso),
+                        SUM(r.dinero_premio)
+                FROM seleccion_provincia s
+                    JOIN resultados r on s.id_concurso = r.id_concurso
+                GROUP BY DISTINCT localidad_concurso;
+        """
+        return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+    
+    elif grafico_buscado == 'categorias':
+        query_concursos_ambito_provincia = f"""
+                WITH seleccion_provincia AS (
+                    SELECT *
+                    FROM concursos
+                    WHERE provincia_concurso = '{provincia}'
+                )
+                SELECT 
+                        DISTINCT s.categoria_concurso,
+                        COUNT( DISTINCT s.id_concurso),
+                        SUM(r.dinero_premio)
+                FROM seleccion_provincia s
+                    JOIN resultados r on s.id_concurso = r.id_concurso
+                GROUP BY DISTINCT s.categoria_concurso;
+        """
+        # return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+        fig = px.bar(pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)), x = 0, y = 1, title = "Concursos por categoria")
+        fig.update_layout(
+                                    width=800, 
+                                    height=400,
+                                    title_font=dict(size = 15, weight='bold'),
+                                    title_x=0.5,
+                                    xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                    yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
+        st.plotly_chart(fig, use_container_width=True)
+
 st.set_page_config(page_title = "Dashboard_hipica",
                     page_icon="🐎",
                     layout="wide",
@@ -321,88 +430,100 @@ if page == "Análisis general":
 
     # Vista "Inicio"
     if st.session_state.vista_general == "inicio":
-        with st.container():
-            col1, col2, col3, col4, col5, col6 = st.columns(6)
-            col1.metric("Nº concursos", f"{ejecutor_querys(cur, query_n_concursos)[0][0]}", border=True)
-            col2.metric("Tipos_pruebas", f"{len(ejecutor_querys(cur, query_pruebas))}", border=True)
-            col3.metric("Duracion_media_concuros", f"{ejecutor_querys(cur, query_duracion_concursos)[0][0]}", border=True)
-            col4.metric("Pruebas_concurso", "9", border=True)
-            col5.metric("Nº jinetes", f"{ejecutor_querys(cur, query_jinetes_recuento)[0][0]}", border=True)
-            col6.metric("Nº caballos", f"{ejecutor_querys(cur, query_caballos)[0][0]}", border=True)
 
-        with st.container():
-            col1, col2 = st.columns([1.5, 1.5])
-            with col1:
-                df = pd.DataFrame(ejecutor_querys(cur, query_concursos_mes)).sort_values(by=0, ascending=True)
-                df[0] = df[0].apply(lambda x: meses[int(x)])
-                fig1 = px.line(df, x=0, y=1, title='Concursos por mes')
-                fig1.update_layout(
-                    title_font=dict(size=20, weight='bold'),
-                    title_x=0.45,
-                    xaxis_title=dict(text='Fecha', font=dict(weight='bold')),
-                    yaxis_title=dict(text='Valor', font=dict(weight='bold')),
-                    yaxis=dict(showgrid=True, gridcolor='lightgray', showticklabels=False),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                x_data = fig1.data[0]['x']
-                y_data = fig1.data[0]['y']
-                fig1.add_trace(go.Scatter(x=x_data, y=y_data, mode='text',
-                                          text=y_data, textposition="top center",
-                                          showlegend=False, textfont=dict(weight='bold')))
-                st.plotly_chart(fig1, use_container_width=True)
-
-            with col2:
-                df = pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito))
-                df[1] = df[1].str.replace('%', '').str.strip().astype(int)
-                colores = ['#4c78a8', '#54a24b']
-                fig2 = px.pie(df, values=1, names=0, title='Porcentaje de concursos por ámbito', color_discrete_sequence=colores)
-                fig2.update_traces(textinfo='percent', textfont_color='white')
-                fig2.update_layout(width=600, 
-                                   height=400, 
-                                   title_x=0.5, 
-                                   title_font=dict(size=16, weight='bold'))
-                st.plotly_chart(fig2, use_container_width=True)
-
-        with st.container():
-            col1, col2 = st.columns([1.5, 1.5])
-            with col1:
-                concursos_provincias = ejecutor_querys(cur, query_concursos_provincia)
-                concursos = pd.DataFrame(concursos_provincias)
-                concursos[2] = round((concursos[1] / concursos[1].sum()) * 100, 2)
-                df_provincias = pd.DataFrame(concursos_provincias, columns=['Provincia', 'Nº concursos'])
-                fig = px.bar(df_provincias, x='Nº concursos', y='Provincia', title="Concursos por provincia")
-                fig.update_layout(
-                        width=10,
-                        height=800,
-                        title_font=dict(size=15, weight='bold'),
-                        title_x=0.5,
-                        xaxis_title=dict(text='Provincia', font=dict(size=12, weight='bold')),
-                        yaxis_title=dict(text='Nº concursos', font=dict(size=12, weight='bold')))
-                st.plotly_chart(fig, use_container_width=True)
-
-            with col2:
-                tipos_pruebas = pd.DataFrame(ejecutor_querys(cur, query_pruebas)).head(5)
-                tipos_pruebas["prueba"] = tipos_pruebas[0].apply(lambda x: prueba_norma.get(x) + ' ' + x)
-                fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas")
-                fig.update_layout(
-                                width=800, 
-                                height=400,
-                                title_font=dict(size = 15, weight='bold'),
-                                title_x=0.5,
-                                xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
-                                yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
-                st.plotly_chart(fig, use_container_width=True)
-            
+        nombres_provincias = [row[0] for row in ejecutor_querys(cur, """SELECT DISTINCT provincia_concurso FROM concursos c;""")]
+        nombres_provincias = ['General'] + nombres_provincias
+        seleccion_provincia = st.selectbox('Selecciona una o más opciones:', nombres_provincias)
+        if seleccion_provincia == 'General':
             with st.container():
-                concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias))
-                fig = px.bar(concursos_categorias, x = 0, y = 1, title = "Concursos por categoria")
-                fig.update_layout(
-                                width=800, 
-                                height=400,
-                                title_font=dict(size = 15, weight='bold'),
-                                title_x=0.5,
-                                xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
-                                yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
-                st.plotly_chart(fig, use_container_width=True)
+                col1, col2, col3, col4, col5, col6 = st.columns(6)
+                col1.metric("Nº concursos", f"{ejecutor_querys(cur, query_n_concursos)[0][0]}", border=True)
+                col2.metric("Tipos_pruebas", f"{len(ejecutor_querys(cur, query_pruebas))}", border=True)
+                col3.metric("Duracion_media_concuros", f"{ejecutor_querys(cur, query_duracion_concursos)[0][0]}", border=True)
+                col4.metric("Pruebas_concurso", "9", border=True)
+                col5.metric("Nº jinetes", f"{ejecutor_querys(cur, query_jinetes_recuento)[0][0]}", border=True)
+                col6.metric("Nº caballos", f"{ejecutor_querys(cur, query_caballos)[0][0]}", border=True)
+
+            with st.container():
+                col1, col2 = st.columns([1.5, 1.5])
+                with col1:
+                    df = pd.DataFrame(ejecutor_querys(cur, query_concursos_mes)).sort_values(by=0, ascending=True)
+                    df[0] = df[0].apply(lambda x: meses[int(x)])
+                    fig1 = px.line(df, x=0, y=1, title='Concursos por mes')
+                    fig1.update_layout(
+                        title_font=dict(size=20, weight='bold'),
+                        title_x=0.45,
+                        xaxis_title=dict(text='Fecha', font=dict(weight='bold')),
+                        yaxis_title=dict(text='Valor', font=dict(weight='bold')),
+                        yaxis=dict(showgrid=True, gridcolor='lightgray', showticklabels=False),
+                        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                    x_data = fig1.data[0]['x']
+                    y_data = fig1.data[0]['y']
+                    fig1.add_trace(go.Scatter(x=x_data, y=y_data, mode='text',
+                                            text=y_data, textposition="top center",
+                                            showlegend=False, textfont=dict(weight='bold')))
+                    st.plotly_chart(fig1, use_container_width=True)
+
+                with col2:
+                    df = pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito))
+                    df[1] = df[1].str.replace('%', '').str.strip().astype(int)
+                    colores = ['#4c78a8', '#54a24b']
+                    fig2 = px.pie(df, values=1, names=0, title='Porcentaje de concursos por ámbito', color_discrete_sequence=colores)
+                    fig2.update_traces(textinfo='percent', textfont_color='white')
+                    fig2.update_layout(width=600, 
+                                    height=400, 
+                                    title_x=0.5, 
+                                    title_font=dict(size=16, weight='bold'))
+                    st.plotly_chart(fig2, use_container_width=True)
+
+            with st.container():
+                col1, col2 = st.columns([1.5, 1.5])
+                with col1:
+                    concursos_provincias = ejecutor_querys(cur, query_concursos_provincia)
+                    concursos = pd.DataFrame(concursos_provincias)
+                    concursos[2] = round((concursos[1] / concursos[1].sum()) * 100, 2)
+                    df_provincias = pd.DataFrame(concursos_provincias, columns=['Provincia', 'Nº concursos'])
+                    fig = px.bar(df_provincias, x='Nº concursos', y='Provincia', title="Concursos por provincia")
+                    fig.update_layout(
+                            width=10,
+                            height=800,
+                            title_font=dict(size=15, weight='bold'),
+                            title_x=0.5,
+                            xaxis_title=dict(text='Provincia', font=dict(size=12, weight='bold')),
+                            yaxis_title=dict(text='Nº concursos', font=dict(size=12, weight='bold')))
+                    st.plotly_chart(fig, use_container_width=True)
+
+                with col2:
+                    tipos_pruebas = pd.DataFrame(ejecutor_querys(cur, query_pruebas)).head(5)
+                    tipos_pruebas["prueba"] = tipos_pruebas[0].apply(lambda x: prueba_norma.get(x) + ' ' + x)
+                    fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas")
+                    fig.update_layout(
+                                    width=800, 
+                                    height=400,
+                                    title_font=dict(size = 15, weight='bold'),
+                                    title_x=0.5,
+                                    xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
+                                    yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with st.container():
+                    concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias))
+                    fig = px.bar(concursos_categorias, x = 0, y = 1, title = "Concursos por categoria")
+                    fig.update_layout(
+                                    width=800, 
+                                    height=400,
+                                    title_font=dict(size = 15, weight='bold'),
+                                    title_x=0.5,
+                                    xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                    yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
+                    st.plotly_chart(fig, use_container_width=True)
+
+        else:
+            graficos_provincias(seleccion_provincia, "temporal")
+            graficos_provincias(seleccion_provincia, "ambitos")
+            st.write(graficos_provincias(seleccion_provincia, "localidades"))
+            graficos_provincias(seleccion_provincia, "categorias")
+
 
 
     # Vista "Concursos"

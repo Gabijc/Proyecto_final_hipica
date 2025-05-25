@@ -246,7 +246,7 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     binomio = pd.DataFrame(ejecutor_querys(cur, query_prueba)).rename(columns = {0: 'jinete', 1: 'caballo', 2: 'puntos_obs_r1', 3: 'puntos_tmp_r1', 4: 'tiempo_r1',
                                                                     5: 'puntos_obs_r2', 6: 'puntos_tmp_r2', 7: 'tiempo_r2',
                                                                     8: 'puntos_obs_r3', 9: 'puntos_tmp_r3', 10: 'tiempo_r3',
-                                                                    11: 'prueba', 12: 'concurso', 13: 'estado', 14: 'fecha_prueba', 15: 'puesto'})
+                                                                    11: 'prueba', 12: 'concurso', 13: 'estado', 14: 'fecha_prueba', 15: 'puesto'}).drop_duplicates()
     # METRICAS
     n_concursos = len(binomio['concurso'].unique()) # numero de concursos en los que el caballo ha competido con el jinete seleccionado
     # n_caballos_corridos = len(caballos) # numero de cabllos que el jinete seleccionado corre actualmente/ha corrido este año
@@ -685,6 +685,9 @@ elif page == "Análisis de binomios":
             lista_caballos = caballos_jinete_df[0].tolist()
             caballo_seleccionado = st.selectbox("Selecciona un caballo:", lista_caballos, key="caballo")
 
+            if "'" in caballo_seleccionado:
+                caballo_seleccionado = caballo_seleccionado.replace("'", "''")
+
             if caballo_seleccionado:
                 # Llamo a la función pasando los nombres seleccionados
                 jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio = info_jinete_caballo(jinete_seleccionado, caballo_seleccionado)
@@ -698,7 +701,7 @@ elif page == "Análisis de binomios":
                     col3.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
                     col4.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
 
-                st.write(f"Pruebas en las que compite el caballo: {alturas_buenas}")
+                st.write(f"Pruebas en las que compite el caballo: {', '.join(alturas_buenas)}")
 
                 with st.container():
                     col1, col2 = st.columns([1.5, 1.5])

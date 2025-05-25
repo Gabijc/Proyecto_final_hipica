@@ -153,6 +153,22 @@ query_categorias = """
         GROUP BY categoria_concurso
         ORDER BY 1 DESC;
 """
+query_concursos_pruebas_concurso = """
+        
+        WITH pruebas_concurso AS (
+                SELECT 
+                        c.id_concurso,
+                        COUNT(DISTINCT p.id_prueba) as n_pruebas_concurso
+                FROM resultados r
+                        JOIN concursos c ON r.id_concurso = c.id_concurso
+                        JOIN pruebas p ON r.id_prueba = p.id_prueba
+                GROUP BY c.id_concurso
+        )
+        SELECT 
+                ROUND(AVG(n_pruebas_concurso), 0)
+        FROM pruebas_concurso;
+
+"""
 
 lista_nombres = [tupla[0] for tupla in ejecutor_querys(cur, query_jinetes)]
 def concursos_seleccionado(elementos, coso = 'info_concursos'):
@@ -414,6 +430,7 @@ def graficos_provincias (provincia, grafico_buscado, filtro = None):
                                         yaxis_title=dict(text='Nº binomios', font=dict(size = 12, weight='bold')))
             st.plotly_chart(fig, use_container_width=True)
 
+
 st.set_page_config(page_title = "Dashboard_hipica",
                     page_icon="🐎",
                     layout="wide",
@@ -468,7 +485,7 @@ if page == "Análisis general":
                 col1.metric("Nº concursos", f"{ejecutor_querys(cur, query_n_concursos)[0][0]}", border=True)
                 col2.metric("Tipos_pruebas", f"{len(ejecutor_querys(cur, query_pruebas))}", border=True)
                 col3.metric("Duracion_media_concuros", f"{ejecutor_querys(cur, query_duracion_concursos)[0][0]}", border=True)
-                col4.metric("Pruebas_concurso", "9", border=True)
+                col4.metric("Pruebas_concurso", round(ejecutor_querys(cur, query_concursos_pruebas_concurso)[0][0]), border=True)
                 col5.metric("Nº jinetes", f"{ejecutor_querys(cur, query_jinetes_recuento)[0][0]}", border=True)
                 col6.metric("Nº caballos", f"{ejecutor_querys(cur, query_caballos)[0][0]}", border=True)
 
@@ -587,7 +604,7 @@ if page == "Análisis general":
 
         if seleccion_concurso:
             # Obtener las pruebas del/los concurso/s seleccionados
-            df = concursos_seleccionado(seleccion_concurso)
+            df = concursos_seleccionado(seleccion_concurso).rename(columns = {0: "Concurso", 1: "Pruebas", 2: "Fecha_prueba"})
 
             if st.session_state.vista_concurso == "lista_pruebas":
                 st.write("### Pruebas disponibles")
@@ -595,7 +612,7 @@ if page == "Análisis general":
 
                 # Crear opciones legibles para el selectbox
                 opciones_pruebas = [
-                    f"{row[1]} - {row[2]} - {row[0]}"
+                    f"{row["Pruebas"]} - {row["Fecha_prueba"]} - {row["Concurso"]}"
                     for _, row in df.iterrows()
                 ]
 
@@ -604,13 +621,13 @@ if page == "Análisis general":
                 # Botón para confirmar selección
                 if seleccion and st.button("Ver resultados de esta prueba"):
                     fila = df.loc[
-                        df.apply(lambda r: f"{r[1]} - {r[2]} - {r[0]}", axis=1) == seleccion
+                        df.apply(lambda r: f"{r["Pruebas"]} - {r["Fecha_prueba"]} - {r["Concurso"]}", axis=1) == seleccion
                     ].iloc[0]
 
                     st.session_state.prueba_seleccionada = {
-                        "nombre_prueba": fila[1],
-                        "nombre_concurso": fila[0],
-                        "fecha_prueba": fila[2]
+                        "nombre_prueba": fila["Pruebas"],
+                        "nombre_concurso": fila["Concurso"],
+                        "fecha_prueba": fila["Fecha_prueba"]
                     }
                     st.session_state.vista_concurso = "resultados"
 
@@ -677,7 +694,7 @@ elif page == "Análisis de binomios":
                     col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
                     col1.metric("Jinete", f"{jinete}", border=True)
                     col2.metric("Caballo", f"{caballo}", border=True)
-                    col3.metric("Edad caballo", f"{edad_caballo}", border=True)
+                    col3.metric("Rango edad caballo", f"{edad_caballo}", border=True)
                     col4.metric("Numero de concursos", f"{n_concursos}", border=True)
                     col5.metric("Alturas competidas", f"{alturas_buenas}", border=True)
                     col6.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)

@@ -689,17 +689,17 @@ elif page == "Análisis de binomios":
                 # Llamo a la función pasando los nombres seleccionados
                 jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio = info_jinete_caballo(jinete_seleccionado, caballo_seleccionado)
                 df = info_jinete_caballo(jinete, caballo)[-1]
-
+                st.write(f"Jinete seleccionado: {jinete}")
+                st.write(f"Caballo seleccionado: {caballo}")
                 with st.container():
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-                    col1.metric("Jinete", f"{jinete}", border=True)
-                    col2.metric("Caballo", f"{caballo}", border=True)
-                    col3.metric("Rango edad caballo", f"{edad_caballo}", border=True)
-                    col4.metric("Numero de concursos", f"{n_concursos}", border=True)
-                    col5.metric("Alturas competidas", f"{alturas_buenas}", border=True)
-                    col6.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
-                    col7.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
-                
+                    col1, col2, col3, col4= st.columns(4)
+                    col1.metric("Rango edad caballo", f"{edad_caballo}", border=True)
+                    col2.metric("Numero de concursos", f"{n_concursos}", border=True)
+                    col3.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
+                    col4.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
+
+                st.write(f"Pruebas en las que compite el caballo: {alturas_buenas}")
+
                 with st.container():
                     col1, col2 = st.columns([1.5, 1.5])
                     with col1:

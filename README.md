@@ -1,5 +1,7 @@
 # Una mirada analítica al deporte ecuestre
 
+![Salto de obstáculos](Documentation/foto_readme.jpg)
+
 ## 📖 Descripción
 
 La hípica es uno de los deportes más complejos a día de hoy. Se ve influido por múltiples factores más allá del rendimiento individual del jinete o del caballo, haciendo que el análisis de resultados de las competiciones sea especialmente desafiante. Además, la escasa disponibilidad de datos dificulta tanto la toma de decisiones como la comprensión del deporte por parte de su audiencia.

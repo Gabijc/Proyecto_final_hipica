@@ -9,30 +9,34 @@
 /Proyecto_final_hipica
 │
 ├── /data/                                      # Carpeta para almacenar los datos crudos y procesados.
-|        ├── hoteles_competencia.csv            # Datos de eventos de Madrid obtenidos desde una API.
-|        ├── hoteles_competencia.csv            # Datos de hoteles de la competencia obtenidos por scraping.
-|        ├── reservas_hoteles_limpio.csv        # Datos de hoteles del grupo y de la competencia limpios.
-|        └── reservas_hoteles.parquet           # Datos de hoteles del grupo.
+|        ├── data_completo                      # Datos de concurso completo.
+|        ├── data_salto                         # Datos de salto de obstáculos.
 |
-├── /notebooks/                                  # Notebooks de Jupyter con con análisis preliminares, pruebas de código y exploración de datos.
-|        ├── Análisis_inicial.ipynb             # Análisis y limpieza de los datos obtenidos.
-|        ├── Scrapeo_info.ipynb                 # Web scraping de los hoteles de la competencia.
-|        ├── Extraccion_api.ipynb               # Extracción de información de eventos de una API.
-|        ├── Carga_BBDD_Hoteles.ipynb           # Conexión y carga de los datos a la base de datos.
-|        ├── Bonus_track.ipynb                  # Análisis de la información de la base de datos.
-|        └──  Script_Creacion_BBDD_Hoteles.sql  # Script de creación de la base de datos.
+├── /Documentation/                             # Notebooks de Jupyter con con análisis preliminares, pruebas de código y exploración de datos.
+|        ├── /Entregables/                      # Directorio que contiene los entregables realizados durante el proyecto.
+|        ├── /Reglamentos/                      # Directorio que contiene el reglamento de las disciplinas de salto de obstáculos y concurso completo.
+|        ├── Informe_final.pdf                  # Informe detallado del proceso seguido en el proyecto.
+|        ├── ERD_BBDD_Hipica.png                # Esquema entidad relación de la base de datos.
+|        └── Script_Creacion_BBDD.sql           # Script de creación de la base de datos.
+|
+├── /Notebooks/                                 # Notebooks de Jupyter con con análisis preliminares, pruebas de código y exploración de datos.
+|        ├── scrapeo_concursos_salto.ipynb             # Análisis y limpieza de los datos obtenidos.
+|        ├── scrapeo_concursos_completo.ipynb                 # Web scraping de los hoteles de la competencia.
+|        ├── union_datos_scrapeados.ipynb               # Extracción de información de eventos de una API.
+|        ├── EDA.ipynb           # Conexión y carga de los datos a la base de datos.
+|        └── carga_BBDD.ipynb                  # Análisis de la información de la base de datos. 
 |        
 ├── /src/                                       # Scripts de procesamiento y modelado
-|        ├── soporte_carga.py                   # Funciones auxiliares para la carga de datos a la base.
-|        ├── soporte_limpieza.py                # Funciones auxiliares para la limpieza y el procesamiento de datos.
-|        ├── soporte_extraccion.py              # Funciones auxiliares para la extraccion de datos mediante web scraping y APIs.
-|        └── soporte_informe.py                 # Funciones auxiliares para generar visualizaciones e insights.
+|        ├── soporte_extraccion_salto.py        # Funciones auxiliares para la extracción y limpieza de los datos extraídos de la disciplina de salto de obstáculos.
+|        ├── soporte_extraccion_completo.py     # Funciones auxiliares para la extracción y limpieza de los datos extraídos de la disciplina de concurso completo.
+|        ├── soporte_extraccion_general.py      # Funciones auxiliares para la extraccion de datos de forma general para las disciplinas analizadas.
+|        └── soporte_carga_dashboard.py         # Funciones auxiliares para realizar la carga a la base de datos y generar visualizaciones e insights.
 |
 ├── extraccion_salto.py                         # Script para realizar el proceso de ETL de la disciplina de salto de obstáculos.
 ├── extraccion_completo.py                      # Script para realizar el proceso de extracción de la disciplina de concurso completo.
-├── app.py                                      # Script de creación de un dashbaord interactivo
+├── app.py                                      # Script de creación del dashboard interactivo, y acceso a los resultados de concursos. 
 ├── README.md                                   # Descripción del proyecto
-├── /requirements.txt                           # Archivo de dependencias para el proyecto
+├── requirements.txt                           # Archivo de dependencias para el proyecto
 ```
   
 ## 🛠️ Instalación y Requisitos

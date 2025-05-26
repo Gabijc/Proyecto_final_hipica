@@ -182,3 +182,4 @@ data/data_doma
 urls_fallidas.txt
 extraccion_doma.py
 src/soporte_extraccion_doma.py
+Notebooks/scrapeo_concursos_doma.ipynb 

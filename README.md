@@ -28,15 +28,11 @@
 |        ├── soporte_extraccion.py              # Funciones auxiliares para la extraccion de datos mediante web scraping y APIs.
 |        └── soporte_informe.py                 # Funciones auxiliares para generar visualizaciones e insights.
 |
-├── main_carga.py                               # Script para realizar la carga de datos a la base.
-├── main_extraccion.py                          # Script para realizar el scraping de datos de la competencia y las llamadas a la API. 
-├── main_informe.py                             # Script para realizar el scraping de datos de la competencia
-├── main_limpieza.py                            # Script para realizar la limpieza de los datos.
-├── main.py                                     # Script para realizar el proceso de ETL y la generación de insights.
+├── extraccion_salto.py                         # Script para realizar el proceso de ETL de la disciplina de salto de obstáculos.
+├── extraccion_completo.py                      # Script para realizar el proceso de extracción de la disciplina de concurso completo.
 ├── app.py                                      # Script de creación de un dashbaord interactivo
 ├── README.md                                   # Descripción del proyecto
 ├── /requirements.txt                           # Archivo de dependencias para el proyecto
-├── .env                                        # Archivo de variables de entorno (no debe subirse al repositorio)
 ```
   
 ## 🛠️ Instalación y Requisitos

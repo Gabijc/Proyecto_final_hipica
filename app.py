@@ -217,6 +217,8 @@ def extraer_altura_y_edad(texto):
     return altura, edad
 
 def info_jinete_caballo(jinete_entrada, caballo_entrada):
+    if "'" in caballo_entrada:
+        caballo_entrada = caballo_entrada.replace("'", "''")
     query_prueba = f""" 
             SELECT 
                 j.nombre_jinete,
@@ -684,9 +686,6 @@ elif page == "Análisis de binomios":
         if not caballos_jinete_df.empty:
             lista_caballos = caballos_jinete_df[0].tolist()
             caballo_seleccionado = st.selectbox("Selecciona un caballo:", lista_caballos, key="caballo")
-
-            if "'" in caballo_seleccionado:
-                caballo_seleccionado = caballo_seleccionado.replace("'", "''")
 
             if caballo_seleccionado:
                 # Llamo a la función pasando los nombres seleccionados

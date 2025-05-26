@@ -1,2 +1,1 @@
-# Proyecto_final_hipica
-Proyecto final del bootcamp de HackIO
+# Una mirada analítica al deporte ecuestre

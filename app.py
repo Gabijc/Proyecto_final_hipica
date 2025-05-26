@@ -8,12 +8,16 @@ import re
 from datetime import date
 import os
 from src.soporte_carga_dashboard import conexion_BBDD, ejecutor_querys  # type: ignore
+from dotenv import load_dotenv
 
-dbname = "BBDD_Hipica" # base a la que nos queremos conectar
-user = "postgres"
-password = "admin"
-host = "localhost"
-port = "5432" # puerto en el que s eencuentra postgres
+
+
+# dbname = "BBDD_Hipica" # base a la que nos queremos conectar
+# user = "postgres"
+# password = "admin"
+# host = "localhost"
+# port = "5432" # puerto en el que s eencuentra postgres
+load_dotenv()
 
 dbname = os.getenv("nombre_BBDD")
 user = os.getenv("usuario")
@@ -439,18 +443,6 @@ st.set_page_config(page_title = "Dashboard_hipica",
                     initial_sidebar_state="collapsed",
                     menu_items={ 'Get Help': "https://github.com/Gabijc/Proyecto_ETL_Hoteles"}) 
 
-# def set_bg_color(color):
-#     st.markdown(
-#         f"""
-#          <style>
-#          .stApp {{
-#              background-color: {color};
-#          }}
-#          </style>
-#          """,
-#         unsafe_allow_html=True
-#     )
-# set_bg_color("#110057")  # Un verde claro
 
 st.sidebar.title("Navegación de páginas")
 page = st.sidebar.radio(label="Selecciona una página",

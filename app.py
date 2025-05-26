@@ -448,20 +448,18 @@ st.set_page_config(page_title = "Dashboard_hipica",
                     initial_sidebar_state="collapsed",
                     menu_items={ 'Get Help': "https://github.com/Gabijc/Proyecto_ETL_Hoteles"}) 
 
-# def set_bg_color(color):
-#     st.markdown(
-#         f"""
-#          <style>
-#          .stApp {{
-#              background-color: {color};
-#          }}
-#          </style>
-#          """,
-#         unsafe_allow_html=True
-#     )
-
-# Ejemplo de uso:
-#set_bg_color('#E5F6E3')  # Un verde claro
+def set_bg_color(color):
+    st.markdown(
+        f"""
+         <style>
+         .stApp {{
+             background-color: {color};
+         }}
+         </style>
+         """,
+        unsafe_allow_html=True
+    )
+set_bg_color('#E5F6E3')  # Un verde claro
 
 
 st.sidebar.title("Navegación de páginas")
@@ -474,21 +472,60 @@ if "vista_general" not in st.session_state:
 
 if page == "Análisis general":
 
-    # Botones para cambiar vista
-    if st.button("Inicio"):
-        st.session_state.vista_general = "inicio"
-    if st.button("Concursos"):
-        st.session_state.vista_general = "concursos"
-
-    st.markdown("<h1 style='text-align: center;'>Análisis de la competición hípica</h1>", unsafe_allow_html=True)
+    with st.container():
+        col1, col2, col3 = st.columns([0.15, 1, 2])
+        with col1:
+            # Botones para cambiar vista
+            if st.button("Inicio"):
+                st.session_state.vista_general = "inicio"
+        with col2:
+            if st.button("Concursos"):
+                st.session_state.vista_general = "concursos"
 
     # Vista "Inicio"
     if st.session_state.vista_general == "inicio":
+        st.markdown("<h1 style='text-align: center;'>Análisis de la competición hípica</h1>", unsafe_allow_html=True)
 
         nombres_provincias = [row[0] for row in ejecutor_querys(cur, """SELECT DISTINCT provincia_concurso FROM concursos c;""")]
         nombres_provincias = ['General'] + nombres_provincias
-        seleccion_provincia = st.selectbox('Selecciona una o más opciones:', nombres_provincias)
+        with st.container():
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                seleccion_provincia = st.selectbox('Selecciona una o más opciones:', nombres_provincias)
         if seleccion_provincia == 'General':
+            # Inyectar CSS para centrar el contenido dentro de st.metric
+            st.markdown("""
+                <style>
+                /* Contenedor general de cada métrica */
+                div[data-testid="stMetric"] {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100px;
+                    padding: 0.5rem;
+                }
+
+                /* Título centrado y más grande */
+                div[data-testid="stMetric"] > div:first-child {
+                    text-align: center;
+                    font-weight: bold;
+                    font-size: 2rem;  /* Tamaño del título */
+                    width: 100%;
+                }
+
+                /* Valor centrado y más grande */
+                div[data-testid="stMetric"] > div:nth-child(2) {
+                    text-align: center;
+                    font-size: 2rem;  /* Tamaño del número */
+                    width: 100%;
+                    justify-content: center;
+                    display: flex;
+                    align-items: center;
+                    height: 2.5rem;
+                }
+                </style>
+                """, unsafe_allow_html=True)
             with st.container():
                 col1, col2, col3, col4, col5, col6 = st.columns(6)
                 col1.metric("Nº concursos", f"{ejecutor_querys(cur, query_n_concursos)[0][0]}", border=True)
@@ -538,7 +575,7 @@ if page == "Análisis general":
                 fig = px.bar(df_provincias, x='Provincia', y='Nº concursos', title="Concursos por provincia")
                 fig.update_layout(
                             width=10,
-                            height=800,
+                            height=400,
                             title_font=dict(size=15, weight='bold'),
                             title_x=0.5,
                             xaxis_title=dict(text='Provincia', font=dict(size=12, weight='bold')),
@@ -550,11 +587,11 @@ if page == "Análisis general":
             with st.container():
                 col1, col2 = st.columns([1.5, 1.5])
                 with col1:
-                    concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias))
+                    concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias)).sort_values(by = 1, ascending=False)
                     fig = px.bar(concursos_categorias, x = 0, y = 1, title = "Concursos por categoria")
                     fig.update_layout(
                                         width=800, 
-                                        height=400,
+                                        height=500,
                                         title_font=dict(size = 15, weight='bold'),
                                         title_x=0.5,
                                         xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
@@ -566,7 +603,7 @@ if page == "Análisis general":
                     fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas")
                     fig.update_layout(
                                         width=800, 
-                                        height=400,
+                                        height=550,
                                         title_font=dict(size = 15, weight='bold'),
                                         title_x=0.5,
                                         xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
@@ -574,8 +611,12 @@ if page == "Análisis general":
                     st.plotly_chart(fig, use_container_width=True) 
 
         else:
-            graficos_provincias(seleccion_provincia, "temporal")
-            graficos_provincias(seleccion_provincia, "ambitos")
+            with st.container():
+                col1, col2 = st.columns([1.5, 1.5])
+                with col1:
+                    graficos_provincias(seleccion_provincia, "temporal")
+                with col2:
+                    graficos_provincias(seleccion_provincia, "ambitos")
             st.write(graficos_provincias(seleccion_provincia, "localidades"))
             with st.container():
                 col1, col2 = st.columns([0.5, 3])
@@ -587,6 +628,7 @@ if page == "Análisis general":
 
     # Vista "Concursos"
     elif st.session_state.vista_general == "concursos":
+        st.markdown("<h1 style='text-align: center;'>Búsqueda de resultados</h1>", unsafe_allow_html=True)
         # Inicializar vista_concurso si no está en session_state
         if "vista_concurso" not in st.session_state:
             st.session_state.vista_concurso = "lista_pruebas"
@@ -702,6 +744,38 @@ elif page == "Análisis de binomios":
                 df = info_jinete_caballo(jinete, caballo)[-1]
                 st.write(f"Jinete seleccionado: {jinete}")
                 st.write(f"Caballo seleccionado: {caballo}")
+                st.markdown("""
+                <style>
+                /* Contenedor general de cada métrica */
+                div[data-testid="stMetric"] {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100px;
+                    padding: 0.5rem;
+                }
+
+                /* Título centrado y más grande */
+                div[data-testid="stMetric"] > div:first-child {
+                    text-align: center;
+                    font-weight: bold;
+                    font-size: 2rem;  /* Tamaño del título */
+                    width: 100%;
+                }
+
+                /* Valor centrado y más grande */
+                div[data-testid="stMetric"] > div:nth-child(2) {
+                    text-align: center;
+                    font-size: 2rem;  /* Tamaño del número */
+                    width: 100%;
+                    justify-content: center;
+                    display: flex;
+                    align-items: center;
+                    height: 2.5rem;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 with st.container():
                     col1, col2, col3, col4 = st.columns(4)
                     col1.metric("Rango edad caballo", f"{edad_caballo}", border=True)

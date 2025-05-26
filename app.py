@@ -236,7 +236,8 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
                 co.nombre_concurso,
                 r.estado,
                 p.fecha_prueba,
-                r.puesto
+                r.puesto,
+                co.id_concurso
             FROM resultados r
                 JOIN caballos c ON r.id_caballo = c.id_caballo
                 JOIN jinetes j ON r.id_jinete = j.id_jinete
@@ -248,9 +249,9 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     binomio = pd.DataFrame(ejecutor_querys(cur, query_prueba)).rename(columns = {0: 'jinete', 1: 'caballo', 2: 'puntos_obs_r1', 3: 'puntos_tmp_r1', 4: 'tiempo_r1',
                                                                     5: 'puntos_obs_r2', 6: 'puntos_tmp_r2', 7: 'tiempo_r2',
                                                                     8: 'puntos_obs_r3', 9: 'puntos_tmp_r3', 10: 'tiempo_r3',
-                                                                    11: 'prueba', 12: 'concurso', 13: 'estado', 14: 'fecha_prueba', 15: 'puesto'}).drop_duplicates()
+                                                                    11: 'prueba', 12: 'concurso', 13: 'estado', 14: 'fecha_prueba', 15: 'puesto', 16: 'id_concurso'}).drop_duplicates()
     # METRICAS
-    n_concursos = len(binomio['concurso'].unique()) # numero de concursos en los que el caballo ha competido con el jinete seleccionado
+    n_concursos = len(binomio['id_concurso'].unique()) # numero de concursos en los que el caballo ha competido con el jinete seleccionado
     # n_caballos_corridos = len(caballos) # numero de cabllos que el jinete seleccionado corre actualmente/ha corrido este año
     porcentaje_recorridos_finalizados = round(len(binomio[binomio["estado"] == "FIN"])/len(binomio) * 100, 2) # porcentaje de pruebas finalizadas
 

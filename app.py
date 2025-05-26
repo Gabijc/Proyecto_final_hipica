@@ -465,7 +465,7 @@ if "vista_general" not in st.session_state:
     st.session_state.vista_general = "inicio"  # por defecto muestra el inicio
 
 if page == "Análisis general":
-    st.title("Análisis general")
+    st.markdown("<h1 style='text-align: center;'>Análisis de la competición hípica</h1>", unsafe_allow_html=True)
 
     # Botones para cambiar vista
     col1, col2 = st.columns(2)

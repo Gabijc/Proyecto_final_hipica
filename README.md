@@ -1,6 +1,6 @@
 # Una mirada analítica al deporte ecuestre
 
-![Salto de obstáculos](Documentation/foto_readme.jpg)
+![Salto de obstáculos](Documentation/foto_readme.JPG)
 
 ## 📖 Descripción
 

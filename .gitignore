@@ -178,5 +178,6 @@ data/data_salto/resultados
 data/data_completo/resultados
 data/data_doma/resultados
 data/data_salto/resultados_2025
+data/data_doma
 urls_fallidas.txt
 extraccion_doma.py

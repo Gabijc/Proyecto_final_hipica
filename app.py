@@ -6,17 +6,8 @@ import plotly.graph_objects as go  # type: ignore
 import numpy as np
 import re
 from datetime import date
-
-def conexion_BBDD(nombre_BBDD, usuario, contraseña, anfitrion, puerto):
-
-    conn = ps.connect(
-                    dbname = nombre_BBDD, 
-                    user = usuario,
-                    password = contraseña,
-                    host = anfitrion,
-                    port = puerto)
-
-    return conn
+import os
+from src.soporte_carga_dashboard import conexion_BBDD, ejecutor_querys  # type: ignore
 
 dbname = "BBDD_Hipica" # base a la que nos queremos conectar
 user = "postgres"
@@ -24,16 +15,14 @@ password = "admin"
 host = "localhost"
 port = "5432" # puerto en el que s eencuentra postgres
 
+dbname = os.getenv("nombre_BBDD")
+user = os.getenv("usuario")
+password = os.getenv("password")
+host = os.getenv("host")
+port = os.getenv("port")
+
 conn = conexion_BBDD(dbname, user, password, host, port)
 cur = conn.cursor()
-# COmprobamos que la conexión está creada y conectada
-cur.execute("SELECT version();")
-cur.fetchone() 
-
-
-def ejecutor_querys(cur, query):
-    cur.execute(query)
-    return cur.fetchall()
 
 meses = {
     1: "enero",
@@ -380,13 +369,15 @@ def graficos_provincias (provincia, grafico_buscado, filtro = None):
                 )
                 SELECT 
                         DISTINCT s.localidad_concurso,
-                        COUNT(s.id_concurso),
+                        COUNT(DISTINCT s.id_concurso),
                         SUM(r.dinero_premio)
                 FROM seleccion_provincia s
                     JOIN resultados r on s.id_concurso = r.id_concurso
                 GROUP BY DISTINCT localidad_concurso;
         """
-        return pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia))
+        df = pd.DataFrame(ejecutor_querys(cur, query_concursos_ambito_provincia)).rename(columns={0: 'Localidad', 1: 'Nº concursos', 2: 'Dinero repartido'})
+        df["Dinero repartido"] = df["Dinero repartido"].apply(lambda x: f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") + " €")
+        return df
     
     elif grafico_buscado == 'categorias':
         query_concursos_ambito_provincia = f"""
@@ -448,19 +439,18 @@ st.set_page_config(page_title = "Dashboard_hipica",
                     initial_sidebar_state="collapsed",
                     menu_items={ 'Get Help': "https://github.com/Gabijc/Proyecto_ETL_Hoteles"}) 
 
-def set_bg_color(color):
-    st.markdown(
-        f"""
-         <style>
-         .stApp {{
-             background-color: {color};
-         }}
-         </style>
-         """,
-        unsafe_allow_html=True
-    )
-set_bg_color('#E5F6E3')  # Un verde claro
-
+# def set_bg_color(color):
+#     st.markdown(
+#         f"""
+#          <style>
+#          .stApp {{
+#              background-color: {color};
+#          }}
+#          </style>
+#          """,
+#         unsafe_allow_html=True
+#     )
+# set_bg_color("#110057")  # Un verde claro
 
 st.sidebar.title("Navegación de páginas")
 page = st.sidebar.radio(label="Selecciona una página",

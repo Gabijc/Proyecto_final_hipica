@@ -216,6 +216,9 @@ def extraer_altura_y_edad(texto):
 
     return altura, edad
 
+def redondear_a_multiplo(valor, multiplo):
+        return int(round(valor / multiplo) * multiplo)
+
 def info_jinete_caballo(jinete_entrada, caballo_entrada):
     if "'" in caballo_entrada:
         caballo_entrada = caballo_entrada.replace("'", "''")
@@ -296,8 +299,12 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     # Número de salidas a pista
     num_salidas = len(salidas_pista) # numero de recorridos/salidas a pista que ha realizado el cabllo con el jinete seleccionado
 
-    # Promedio de puntos en obstáculos por salida
-    promedio_puntos_obs = round(np.mean(salidas_pista)) # promedio de puntos de obstaculos que realiza el caballo en una salida a pista 
+    # Promedio de puntos en obstáculos por salida (manejo seguro de NaN)
+    if salidas_pista and not np.isnan(np.nanmean(salidas_pista)):
+        media_real = np.nanmean(salidas_pista)
+        promedio_puntos_obs = redondear_a_multiplo(media_real, 4)
+    else:
+        promedio_puntos_obs = "No hay datos"  # Puedes poner np.nan si prefieres indicar que no hay datos
 
     # Porcentaje de salidas con 0 puntos en obstáculos
     veces_cero = sum(1 for x in salidas_pista if x == 0) # numero de veces que el caballo ha hecho cero puntos en obstaculos
@@ -305,6 +312,7 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     jinete = binomio['jinete'].unique()[0]
     caballo = binomio['caballo'].unique()[0]
     edad_caballo = edad_bueno[0] if edad_bueno else "No joven"
+    
     return jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio
 
 def graficos_provincias (provincia, grafico_buscado, filtro = None):
@@ -465,16 +473,14 @@ if "vista_general" not in st.session_state:
     st.session_state.vista_general = "inicio"  # por defecto muestra el inicio
 
 if page == "Análisis general":
-    st.markdown("<h1 style='text-align: center;'>Análisis de la competición hípica</h1>", unsafe_allow_html=True)
 
     # Botones para cambiar vista
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Inicio"):
-            st.session_state.vista_general = "inicio"
-    with col2:
-        if st.button("Concursos"):
-            st.session_state.vista_general = "concursos"
+    if st.button("Inicio"):
+        st.session_state.vista_general = "inicio"
+    if st.button("Concursos"):
+        st.session_state.vista_general = "concursos"
+
+    st.markdown("<h1 style='text-align: center;'>Análisis de la competición hípica</h1>", unsafe_allow_html=True)
 
     # Vista "Inicio"
     if st.session_state.vista_general == "inicio":
@@ -525,46 +531,47 @@ if page == "Análisis general":
                     st.plotly_chart(fig2, use_container_width=True)
 
             with st.container():
-                col1, col2 = st.columns([1.5, 1.5])
-                with col1:
-                    concursos_provincias = ejecutor_querys(cur, query_concursos_provincia)
-                    concursos = pd.DataFrame(concursos_provincias)
-                    concursos[2] = round((concursos[1] / concursos[1].sum()) * 100, 2)
-                    df_provincias = pd.DataFrame(concursos_provincias, columns=['Provincia', 'Nº concursos'])
-                    fig = px.bar(df_provincias, x='Nº concursos', y='Provincia', title="Concursos por provincia")
-                    fig.update_layout(
+                concursos_provincias = ejecutor_querys(cur, query_concursos_provincia)
+                concursos = pd.DataFrame(concursos_provincias)
+                concursos[2] = round((concursos[1] / concursos[1].sum()) * 100, 2)
+                df_provincias = pd.DataFrame(concursos_provincias, columns=['Provincia', 'Nº concursos'])
+                fig = px.bar(df_provincias, x='Provincia', y='Nº concursos', title="Concursos por provincia")
+                fig.update_layout(
                             width=10,
                             height=800,
                             title_font=dict(size=15, weight='bold'),
                             title_x=0.5,
                             xaxis_title=dict(text='Provincia', font=dict(size=12, weight='bold')),
                             yaxis_title=dict(text='Nº concursos', font=dict(size=12, weight='bold')))
-                    st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
 
+
+                
+            with st.container():
+                col1, col2 = st.columns([1.5, 1.5])
+                with col1:
+                    concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias))
+                    fig = px.bar(concursos_categorias, x = 0, y = 1, title = "Concursos por categoria")
+                    fig.update_layout(
+                                        width=800, 
+                                        height=400,
+                                        title_font=dict(size = 15, weight='bold'),
+                                        title_x=0.5,
+                                        xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
+                                        yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
+                    st.plotly_chart(fig, use_container_width=True)
                 with col2:
                     tipos_pruebas = pd.DataFrame(ejecutor_querys(cur, query_pruebas)).head(5)
                     tipos_pruebas["prueba"] = tipos_pruebas[0].apply(lambda x: prueba_norma.get(x) + ' ' + x)
                     fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas")
                     fig.update_layout(
-                                    width=800, 
-                                    height=400,
-                                    title_font=dict(size = 15, weight='bold'),
-                                    title_x=0.5,
-                                    xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
-                                    yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                with st.container():
-                    concursos_categorias = pd.DataFrame(ejecutor_querys(cur, query_categorias))
-                    fig = px.bar(concursos_categorias, x = 0, y = 1, title = "Concursos por categoria")
-                    fig.update_layout(
-                                    width=800, 
-                                    height=400,
-                                    title_font=dict(size = 15, weight='bold'),
-                                    title_x=0.5,
-                                    xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
-                                    yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
-                    st.plotly_chart(fig, use_container_width=True)
+                                        width=800, 
+                                        height=400,
+                                        title_font=dict(size = 15, weight='bold'),
+                                        title_x=0.5,
+                                        xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
+                                        yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
+                    st.plotly_chart(fig, use_container_width=True) 
 
         else:
             graficos_provincias(seleccion_provincia, "temporal")
@@ -676,29 +683,30 @@ if page == "Análisis general":
 
 
 elif page == "Análisis de binomios":
-    st.title("Análisis de binomios")
+    st.markdown("<h1 style='text-align: center;'>Análisis de binomios</h1>", unsafe_allow_html=True)
 
-    # Selección del jinete
-    jinete_seleccionado = st.selectbox("Selecciona un jinete:", lista_nombres, key="jinete")
+    # Selección del jinete (sin selección inicial por defecto)
+    opciones_jinetes = ["Selecciona un jinete..."] + lista_nombres
+    jinete_seleccionado = st.selectbox("Selecciona un jinete:", opciones_jinetes, key="jinete")
 
-    if jinete_seleccionado:
+    if jinete_seleccionado != "Selecciona un jinete...":
         # Obtengo la lista de caballos del jinete
         caballos_jinete_df = concursos_seleccionado(jinete_seleccionado, 'jinetes')
         if not caballos_jinete_df.empty:
-            lista_caballos = caballos_jinete_df[0].tolist()
+            lista_caballos = ["Selecciona un caballo..."] + caballos_jinete_df[0].tolist()
             caballo_seleccionado = st.selectbox("Selecciona un caballo:", lista_caballos, key="caballo")
 
-            if caballo_seleccionado:
+            if caballo_seleccionado != "Selecciona un caballo...":
                 # Llamo a la función pasando los nombres seleccionados
                 jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio = info_jinete_caballo(jinete_seleccionado, caballo_seleccionado)
                 df = info_jinete_caballo(jinete, caballo)[-1]
                 st.write(f"Jinete seleccionado: {jinete}")
                 st.write(f"Caballo seleccionado: {caballo}")
                 with st.container():
-                    col1, col2, col3, col4= st.columns(4)
+                    col1, col2, col3, col4 = st.columns(4)
                     col1.metric("Rango edad caballo", f"{edad_caballo}", border=True)
                     col2.metric("Numero de concursos", f"{n_concursos}", border=True)
-                    col3.metric("Promedio puntos obstaculos", f"{promedio_puntos_obs}", border=True)
+                    col3.metric("Promedio puntos obstáculos", f"{promedio_puntos_obs}", border=True)
                     col4.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
 
                 st.write(f"Pruebas en las que compite el caballo: {', '.join(alturas_buenas)}")
@@ -711,13 +719,11 @@ elif page == "Análisis de binomios":
                         estado_counts.columns = ['estado', 'count']
                         fig = px.pie(estado_counts, values="count", names="estado", title='Porcentaje de finalización pruebas', color_discrete_sequence=colores)
                         fig.update_traces(textinfo='percent', textfont_color='white')
-                        fig.update_layout(width=600, height=400, title_x=0.5, title_font=dict(size = 16, weight='bold'))
+                        fig.update_layout(width=600, height=400, title_x=0.5, title_font=dict(size=16, weight='bold'))
                         st.plotly_chart(fig, use_container_width=True)
-                    with col2: 
 
+                    with col2:
                         filtered_df = df[(df['jinete'] == jinete) & (df['caballo'] == caballo)].copy()
-
-                        # Ensure 'fecha_prueba' is in datetime format
                         filtered_df['fecha_prueba'] = pd.to_datetime(filtered_df['fecha_prueba'])
 
                         if not filtered_df.empty:
@@ -726,20 +732,20 @@ elif page == "Análisis de binomios":
                                 x='fecha_prueba',
                                 y='puesto',
                                 hover_data=['prueba', 'concurso', 'estado', 'puesto'],
-                                title=f'Puesto de {jinete} con {caballo} Over Time')
+                                title=f'Puesto de {jinete} con {caballo} a lo largo del tiempo')
                             fig.update_layout(
                                 xaxis_title='Fecha de la Prueba',
                                 yaxis_title='Puesto')
                             st.plotly_chart(fig, use_container_width=True)
 
-                # Aquí puedes añadir más análisis o gráficos con la variable 'binomio' (DataFrame)
-                st.write(df) 
+                st.write(df)
             else:
                 st.info("Selecciona un caballo para continuar.")
         else:
             st.info(f"No se encontraron caballos para el jinete: {jinete_seleccionado}")
     else:
         st.info("Selecciona un jinete para ver sus caballos.")
+
 
 
 

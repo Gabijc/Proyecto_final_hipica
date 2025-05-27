@@ -11,7 +11,7 @@ from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, r
 
 def extraccion_completo_nac(url, lista_rutas):
     """
-    Extrae y guarda la información de los concursos de concurso completo desde la web de la RFHE, mediante la automatización 
+    Extrae y guarda la información de los concursos de concurso completo nacionales desde la web de la RFHE, mediante la automatización 
     de la navegación utilizando Selenium para extraer información de concursos, pruebas y URLs de resultados 
     desde 2025 hasta 2017. Los datos se almacenan en archivos JSON, divididos en concursos, pruebas y resultados.
 
@@ -113,7 +113,18 @@ def extraccion_completo_nac(url, lista_rutas):
     driver.quit()   
 
 def extraccion_completo_int(url, lista_rutas):
+    """
+    Extrae y guarda la información de los concursos de concurso completo internacionales desde la web de la RFHE, mediante la automatización 
+    de la navegación utilizando Selenium para extraer información de concursos, pruebas y URLs de resultados 
+    desde 2025 hasta 2017. Los datos se almacenan en archivos JSON, divididos en concursos, pruebas y resultados.
 
+    Args:
+        url (str): URL base desde la que se accede a los concursos.
+        lista_rutas (list): Lista con rutas de guardado para los archivos generados.
+    
+    Returns:
+        None: Los datos se guardan en archivos JSON en las rutas indicadas.
+    """
     dictio_concursos_completo_int, dictio_pruebas_completo_int = creacion_dictios_guardado()
     urls_resultados_completo_int = []
 

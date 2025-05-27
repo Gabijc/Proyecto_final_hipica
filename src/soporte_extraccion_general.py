@@ -45,6 +45,15 @@ def get_competiciones(url, ruta_carpeta_guardado):
 
 
 def creacion_dictios_guardado(creacion = True):
+    """
+    Crea y devuelve diccionarios vacíos para almacenar información de concursos y pruebas, o de jinetes y caballos, según el valor del parámetro `creacion`.
+
+    Args:
+        creacion (bool, optional): Si es True, devuelve diccionarios para concursos y pruebas. Si es False, devuelve diccionarios para jinetes y caballos.
+
+    Returns
+        tupla: Una tupla de dos diccionarios vacíos para almacenar información, según el valor de `creacion`.
+    """
     if creacion == True:
         dictio_concursos = {'Nombre': [],
                             'Categoría': [],
@@ -103,7 +112,20 @@ def cambio_pestaña(nº_pestaña, driver):
 
 
 def resultados_disciplina(driver, ambito = "nacional", disciplina = "salto"):
+    """
+    Navega a la sección de resultados de una disciplina y ámbito determinado en la web.
 
+    Args:
+        driver(selenium.webdriver): Instancia del navegador controlado por Selenium.
+        ambito (str, optional): Ámbito del concurso ('nacional' o 'internacional').
+        disciplina (str, optional): Disciplina ecuestre ('salto', 'completo' o 'doma').
+
+    Returns:
+        tupla: Tupla (ambito, disciplina) si se hace clic con éxito. En caso de error, devuelve (None, None).
+    
+    Raises:
+        ValueError: Si se introduce una disciplina no válida.
+    """
     wait = WebDriverWait(driver, 5)
 
     disciplinas = ["salto", "completo", "doma"]
@@ -146,21 +168,57 @@ def resultados_disciplina(driver, ambito = "nacional", disciplina = "salto"):
 
 
 def obtencion_año(driver):
+    """
+    Extrae el año mostrado en la cabecera de la página de competiciones.
 
+    Args:
+        driver(selenium.webdriver): Instancia del navegador.
+
+    Returns
+        int: Año extraído desde la página.
+    """
     path_año = "/html/body/form/table/tbody/tr[1]/td"
     año = int(buscador_elementos(driver, path_año).text.split(" ")[1])
     return año
 
 
 def competiciones_año(driver):
+    """
+    Hace click en la opción del menú que permite consultar las competiciones del año seleccionado.
 
+    Args
+        driver(selenium.webdriver): Instancia del navegador.
+
+    Returns
+        WebElement or None: Elemento Web resultante del click, o None si falla.
+    """
     path_competiciones_año = '/html/body/form/div/div/div/ul/li[13]'
     comp_año = buscador_elementos(driver, path_competiciones_año).click()
     return comp_año
 
 
 def guardado_info(diccionario,  elementos, claves = None, indices = None, default = None, step = None, guardado = True, info = None, federacion = None, ambito = None):
+    """
+    Guarda la información extraída de la web en el diccionario correspondiente, dependiendo del tipo de contenido.
+
+    Args:
+        diccionario (dict): diccionario donde se almacenará la información.
+        elementos (list): Lista de strings con los datos extraídos de la web.
+        claves (list of str, optional): Claves del diccionario que se van a rellenar (solo para info ='general').
+        indices (list of int, optional): Índices de los valores en `elementos` a guardar (solo para info ='general').
+        default (any, optional): Valor por defecto si el índice no existe (solo para info ='general').
+        step (int, optional): Paso para extender listas si `guardado=False` (solo para info ='general').
+        guardado (bool, optional): Indica si se realiza un `.append()` (True) o `.extend()` (False).
+        info (str): Tipo de información a guardar, ya sea "concursos", "jinetes", "caballos" o "general".
+        federacion (str, optional): Tipo de federación, "nacional" o "extranjera".
+        ambito(str, optional): Ámbito del concurso: "nacional" o "internacional".
     
+    Returns:
+        None: guarda la infromación seleccionada en el diccionario correspondiente.
+    
+    Raises:
+        ValueError: si el valor de `info` no es válido.
+    """
     info_disponible = ["general","concursos", "jinetes", "caballos"]
 
     if info not in info_disponible:
@@ -266,7 +324,21 @@ def guardado_info(diccionario,  elementos, claves = None, indices = None, defaul
 
 
 def buscador_elementos(driver, elemento, busqueda = "path", cantidad = True):
+    """
+    Busca uno o varios elementos en la web usando Selenium, con diferentes métodos de localización.
 
+    Args
+        driver (selenium.webdriver): Instancia del navegador.
+        elemento (str): Valor del selector del elemento.
+        busqueda (str, optional): Tipo de selector: "path", "css_selector", "class_name".
+        cantidad (bool, optional): Si True, devuelve un solo elemento; si False, devuelve una lista de elementos.
+
+    Returns
+        WebElement or list of WebElement: Elementos encontrados según el tipo de búsqueda.
+
+    Raises
+        ValueError: Si `busqueda` no es válido o `cantidad` no es booleano.
+    """
     tipo_busqueda = { "path": By.XPATH,
                       "css_selector": By.CSS_SELECTOR,
                     "class_name": By.CLASS_NAME}
@@ -286,6 +358,19 @@ def buscador_elementos(driver, elemento, busqueda = "path", cantidad = True):
         raise ValueError(f"No se pueden buscar más métodos.")
     
 def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, contenido_general):
+    """
+    Extrae y guarda la información principal de un concurso según el ámbito y hace click en el botón
+    para acceder a las pruebas.
+    
+    Args
+        driver (selenium.webdriver): Instancia del navegador.
+        diccionario_concursos (dict): Diccionario donde se almacenará la información del concurso.
+        ambito_buscado (str): Ámbito del concurso: "nacional" o "internacional".
+        contenido_general (list of str):Información extraída de la tabla del concurso.
+
+    Returns
+        None: hace click.
+    """
 
     # Guardamos la información del concurso en el diccionario creado
     guardado_info(diccionario_concursos, contenido_general, info="concursos", ambito=ambito_buscado)
@@ -326,7 +411,18 @@ def extraccion_info_concursos(driver, diccionario_concursos, ambito_buscado, con
         
 
 def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, lista_urls):
+    """
+    Extrae la información restante del concurso y las pruebas asociadas desde la tabla de la web.
     
+    Args
+        driver (selenium.webdriver): Instancia del navegador.
+        diccionario_concursos (dict):Diccionario que contiene los datos del concurso.
+        diccionario_pruebas (dict): Diccionario que almacenará las pruebas del concurso.
+        lista_urls (list): Lista de URLs de concursos para scrapear.
+
+    Returns
+        None
+    """
     # Obtenemos la información del concurso que se encuentra en la tabla de las pruebas
     path_info_restante = "/html/body/form/table/tbody/tr/td/div/div/table/tbody/tr/td/table/tbody/tr[1]/td/table/tbody/tr[1]/td/div/div/div[1]/div[3]/div/table/tbody/tr[2]/td[2]/table/tbody/tr/td"
                           
@@ -363,6 +459,17 @@ def extraccion_info_pruebas(driver, diccionario_concursos, diccionario_pruebas, 
 
 
 def archivos(disciplina, ambito, año):
+    """
+    Genera una lista con nombres estándar de archivos.
+    
+    Args:
+        disciplina (str): Disciplina deportiva (por ejemplo: "salto", "doma", "completo").
+        ambito (str): Ámbito de la competición (por ejemplo: "nacional", "internacional").
+        año (int or str): Año de las competiciones.
+
+    Returns:
+        Lista (list of str): Lista con los nombres de archivos: concursos, pruebas y urls.
+    """
     concursos = f"concursos_{disciplina}_{ambito}_{año}"
     pruebas = f"pruebas_{disciplina}_{ambito}_{año}"
     urls = f"urls_{disciplina}_{ambito}_{año}"
@@ -370,6 +477,22 @@ def archivos(disciplina, ambito, año):
     return lista_nombres_archivos
 
 def descargar_excel(ruta_lectura, ruta_guardado, disciplina):
+    """
+    Automatiza la descarga de archivos Excel a partir de URLs.
+
+    Args:
+        ruta_lectura (str): Ruta del archivo JSON que contiene las URLs de competiciones.
+        ruta_guardado (str): Directorio donde se guardarán los archivos descargados.
+        disciplina (str): Disciplina deportiva ("salto", "doma" o "completo").
+
+    Side Effects: 
+        Descarga archivos .xls desde la web mediante Selenium.
+        Crea un archivo 'urls_fallidas.txt' con las URLs que no pudieron procesarse.
+
+    Notas:
+        La lógica varía según la disciplina por la estructura diferente de las páginas web.
+        Requiere funciones auxiliares como `get_competiciones()` y `buscador_elementos()` además de un WebDriver activo.
+    """
     if disciplina == "salto": 
         i = 5
         j = 3
@@ -458,6 +581,21 @@ def descargar_excel(ruta_lectura, ruta_guardado, disciplina):
         print(f"Se guardaron {len(urls_fallidas)} URLs fallidas en 'urls_fallidas.txt'")
 
 def limpieza_excels(ruta_archivo, ruta_guardado):
+    """
+    Limpia, transforma y combina archivos Excel.
+
+    Args:
+        ruta_archivo (str): Ruta del directorio que contiene los archivos Excel descargados.
+        ruta_guardado (str): Ruta completa (incluyendo nombre de archivo) donde se guardará el CSV final combinado.
+
+    Returns
+        None: El resultado se guarda directamente en un archivo CSV en la ruta especificada.
+
+    Notas:
+        Aplica una transformación con `modificaciones_generales()` y `parse_puntuacion_tupla()` a cada archivo.
+        Extrae datos como tipo de prueba y puntuaciones.
+        Ignora archivos que no se pueden abrir o no tienen el formato esperado.
+    """
     directorio = ruta_archivo
 
     concursos = []

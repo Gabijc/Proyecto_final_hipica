@@ -19,7 +19,19 @@ host = os.getenv("host")
 port = os.getenv("port")
 
 def conexion_BBDD(nombre_BBDD, usuario, contraseña, anfitrion, puerto):
+    """
+    Establece una conexión a una base de datos PostgreSQL.
 
+    Args:
+        nombre_BBDD (str): Nombre de la base de datos.
+        usuario (str): Nombre de usuario.
+        contraseña (str): Contraseña del usuario.
+        anfitrion (str): Dirección del servidor (host).
+        puerto (int): Puerto de conexión.
+
+    Returns:
+        conn: Objeto de conexión a la base de datos.
+    """
     conn = ps.connect(
                     dbname = nombre_BBDD, 
                     user = usuario,
@@ -41,12 +53,31 @@ meses = {
 }
 
 def ejecutor_querys(cur, query):
+    """
+    Ejecuta una consulta SQL y devuelve los resultados.
+
+    Args:
+        cur: Cursor de la base de datos.
+        query (str): Consulta SQL a ejecutar.
+
+    Returns:
+        list: Lista de tuplas con los resultados de la consulta.
+    """
     cur.execute(query)
     return cur.fetchall()
 
 
 def concursos_seleccionado(elementos, coso = 'info_concursos'):
-    
+    """
+    Realiza una consulta sobre concursos o jinetes dependiendo del valor de `coso`.
+
+    Args:
+        elementos (list o str): Lista de nombres de concursos o nombre del jinete.
+        coso (str): Tipo de información a consultar. Puede ser "info_concursos" o "jinetes".
+
+    Returns:
+        pd.DataFrame: Resultados de la consulta en formato DataFrame.
+    """    
     if coso == "info_concursos":
         if not elementos:
                 return pd.DataFrame()
@@ -77,6 +108,15 @@ def concursos_seleccionado(elementos, coso = 'info_concursos'):
         return pd.DataFrame(ejecutor_querys(cur, query))
 
 def extraer_altura_y_edad(texto):
+    """
+    Extrae la altura y la edad de un texto usando expresiones regulares.
+
+    Args:
+        texto (str): Texto del cual extraer la información.
+
+    Returns:
+        tuple: (altura (str), edad (str)) si se encuentran, sino (None, None).
+    """
     altura = None
     edad = None
 
@@ -91,9 +131,30 @@ def extraer_altura_y_edad(texto):
     return altura, edad
 
 def redondear_a_multiplo(valor, multiplo):
-        return int(round(valor / multiplo) * multiplo)
+    """
+    Redondea un número al múltiplo más cercano especificado.
+
+    Args:
+        valor (float/int): Número a redondear.
+        multiplo (int): Múltiplo al que redondear.
+
+    Returns:
+        int: Valor redondeado al múltiplo más cercano.
+    """
+    return int(round(valor / multiplo) * multiplo)
 
 def info_jinete_caballo(jinete_entrada, caballo_entrada):
+    """
+    Obtiene información y métricas del rendimiento de un binomio jinete-caballo.
+
+    Args:
+        jinete_entrada (str): Nombre del jinete.
+        caballo_entrada (str): Nombre del caballo.
+
+    Returns:
+        tupla: Contiene el nombre del jinete, nombre del caballo, edad del caballo, número de concursos, alturas competidas, promedio de puntos por obstáculos,
+            porcentaje de recorridos con 0 puntos y un DataFrame con todos los datos.
+    """
     if "'" in caballo_entrada:
         caballo_entrada = caballo_entrada.replace("'", "''")
     query_prueba = f""" 
@@ -190,7 +251,18 @@ def info_jinete_caballo(jinete_entrada, caballo_entrada):
     return jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio
 
 def graficos_provincias (provincia, grafico_buscado, filtro = None):
+    """
+    Genera gráficos y tablas con información sobre concursos en una provincia concreta.
 
+    Parámetros:
+        provincia (str): Provincia sobre la que hacer la consulta.
+        grafico_buscado (str): Tipo de gráfico o información a generar. Puede ser 'ambitos', 'temporal', 'localidades' o 'categorias'.
+        filtro (str, opcional): Filtro específico para el gráfico de categorías.
+
+    Returns:
+        Para 'ambitos' y 'temporal': genera gráficos de Plotly (no retorna nada).
+        Para 'localidades' y 'categorias': retorna un DataFrame con los resultados.
+    """
     if grafico_buscado == 'ambitos':
         query_concursos_ambito_provincia = f"""
 

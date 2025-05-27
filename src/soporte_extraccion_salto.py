@@ -13,6 +13,18 @@ from src.soporte_extraccion_general import get_competiciones, cambio_pestaña, r
 from src.soporte_extraccion_general import archivos
 
 def extraccion_salto_nac(url, lista_rutas): 
+    """
+    Extrae y guarda la información de los concursos de salto de obstáculos nacionales desde la web de la RFHE, mediante la automatización 
+    de la navegación utilizando Selenium para extraer información de concursos, pruebas y URLs de resultados 
+    desde 2025 hasta 2017. Los datos se almacenan en archivos JSON, divididos en concursos, pruebas y resultados.
+
+    Args:
+        url (str): URL base desde la que se accede a los concursos.
+        lista_rutas (list): Lista con rutas de guardado para los archivos generados.
+    
+    Returns:
+        None: Los datos se guardan en archivos JSON en las rutas indicadas.
+    """
 
     dictio_concursos_salto_nac, dictio_pruebas_salto_nac = creacion_dictios_guardado()
     urls_resultados_salto_nac = []
@@ -108,6 +120,18 @@ def extraccion_salto_nac(url, lista_rutas):
 
 
 def extraccion_salto_int(url, lista_rutas):
+    """
+    Extrae y guarda la información de los concursos de salto de obstáculos internacionales desde la web de la RFHE, mediante la automatización 
+    de la navegación utilizando Selenium para extraer información de concursos, pruebas y URLs de resultados 
+    desde 2025 hasta 2017. Los datos se almacenan en archivos JSON, divididos en concursos, pruebas y resultados.
+
+    Args:
+        url (str): URL base desde la que se accede a los concursos.
+        lista_rutas (list): Lista con rutas de guardado para los archivos generados.
+    
+    Returns:
+        None: Los datos se guardan en archivos JSON en las rutas indicadas.
+    """
     
     dictio_concursos_salto_int, dictio_pruebas_salto_int = creacion_dictios_guardado()
     urls_resultados_salto_int = []
@@ -205,6 +229,22 @@ def extraccion_salto_int(url, lista_rutas):
     driver.quit()
     
 def creacion_columnas(df, columna_crear, columna, coso = "paises"):
+    """
+    Crea nuevas columnas en un DataFrame a partir del contenido de una columna existente. Según si se utiliza la 
+    columna de país, la de estado, o la de premio, aplica una lógica específica para extraer información adicional:
+    - "paises": extrae país de jinete o caballo.
+    - "Estado": clasifica el estado del resultado (RET, ELI, NOP, FIN).
+    - "Premio": indica si hubo premio económico.
+
+    Args:
+        df (pd.DataFrame): DataFrame original.
+        columna_crear (str): Nombre de la nueva columna a crear.
+        columna (str): Columna base desde la cual extraer los datos.
+        coso (str, optional): Lógica a aplicar. Opciones: "paises", "Estado", "Premio". Por defecto "paises".
+
+    Returns:
+        None: El DataFrame se modifica in-place.
+    """
     posiciones = ["RET", "ELI", "NOP"]
 
     df[columna] = df[columna].astype(str)
@@ -220,6 +260,16 @@ def creacion_columnas(df, columna_crear, columna, coso = "paises"):
         df[columna_crear] = df[columna].apply(lambda x: False if x == 0 else True)
         
 def modificaciones_generales(dataframe):
+    """
+    Estandariza y transforma un DataFrame con los resultados de una prueba de salto. Extrae información general (nombre del concurso, prueba, fecha), 
+    renombra columnas, limpia valores y crea columnas adicionales como país del jinete, estado del resultado, etc.
+
+    Args:
+        dataframe (pd.DataFrame): DataFrame sin procesar, extraído de un archivo de resultados.
+
+    Returns:
+        pd.DataFrame: DataFrame transformado y ordenado con columnas limpias y relevantes.
+    """
 
     dataframe["Prueba"] = dataframe.iloc[3,1]
     dataframe["Categoria"] = dataframe.iloc[4,1]
@@ -247,8 +297,16 @@ def modificaciones_generales(dataframe):
 
 def parse_puntuacion_tupla(puntuacion_str):
     """
-    Parsea la cadena de puntuación y devuelve una tupla con los valores
-    para las nuevas columnas.
+    Analiza una cadena con la puntuación de una prueba de salto y devuelve una tupla con los valores detectaando
+    distintos formatos de puntuación compuestos por penalizaciones por obstáculos, penalizaciones por tiempo y el tiempo registrado, 
+    y los devuelve como tupla para posteriores análisis o separación en columnas.
+
+    Args:
+        puntuacion_str (str): Cadena que contiene la puntuación formateada.
+
+    Returns:
+        tuple: Tupla de 9 elementos (ptos_obs_1, ptos_tiempo_1, tiempo_1, ..., ptos_obs_3, ptos_tiempo_3, tiempo_3),
+               donde los valores no presentes son reemplazados por None.
     """
     resultados = str(puntuacion_str).split('\n')
     ptos_obs = [None] * 3
@@ -321,6 +379,17 @@ def parse_puntuacion_tupla(puntuacion_str):
             ptos_obs[2], ptos_tiempo[2], tiempo[2])
 
 def mergeo_dfs(ruta_df_concursos, ruta_df_pruebas, ruta_guardado_df_final):
+    """
+    Realiza la unión, limpieza y transformación de los datos de concursos y pruebas ecuestres.
+
+    Args:
+        ruta_df_concursos (str): Ruta del archivo JSON con información de concursos.
+        ruta_df_pruebas (str): Ruta del archivo CSV con resultados de pruebas.
+        ruta_guardado_df_final (str): Ruta de guardado del DataFrame final combinado en formato CSV.
+
+    Returns:
+        None: el resultado se guarda como un nuevo CSV con los datos combinados y depurados.
+    """
 
     with open(ruta_df_concursos, 'r', encoding='utf-8') as file:
         datos_concursos = json.load(file)

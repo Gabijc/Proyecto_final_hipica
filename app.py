@@ -53,17 +53,17 @@ prueba_norma = {
 
 # QUERYS BUENAS
 query_n_concursos = """
-        SELECT COUNT(id_concurso)
+        SELECT COUNT( DISTINCT id_concurso)
         FROM concursos c;
 """
 
 query_concursos_mes = """
-        SELECT 
+            SELECT 
                 EXTRACT(MONTH FROM fecha_inicio_concurso),
-                COUNT(id_concurso)
+                COUNT(DISTINCT id_concurso)
         FROM concursos c
         GROUP BY EXTRACT(MONTH FROM fecha_inicio_concurso)
-        ORDER BY COUNT(id_concurso) DESC;
+        ORDER BY COUNT(DISTINCT id_concurso) DESC;
 """
 query_concursos_ambito = """
         SELECT 
@@ -239,11 +239,11 @@ if page == "Análisis general":
             with st.container():
                 col1, col2, col3, col4, col5, col6 = st.columns(6)
                 col1.metric("Nº concursos", f"{ejecutor_querys(cur, query_n_concursos)[0][0]}", border=True)
-                col2.metric("Duracion_media_concuros", f"{ejecutor_querys(cur, query_duracion_concursos)[0][0]}", border=True)
-                col3.metric("Pruebas_concurso", round(ejecutor_querys(cur, query_concursos_pruebas_concurso)[0][0]), border=True)
+                col2.metric("Duracion media concuros", f"{ejecutor_querys(cur, query_duracion_concursos)[0][0]} días", border=True)
+                col3.metric("Pruebas medias por concurso", round(ejecutor_querys(cur, query_concursos_pruebas_concurso)[0][0]), border=True)
                 col4.metric("Nº jinetes", f"{ejecutor_querys(cur, query_jinetes_recuento)[0][0]}", border=True)
                 col5.metric("Nº caballos", f"{ejecutor_querys(cur, query_caballos)[0][0]}", border=True)
-                col6.metric("Tipos_pruebas", f"{len(ejecutor_querys(cur, query_pruebas))}", border=True)
+                col6.metric("Tipos de pruebas", f"{len(ejecutor_querys(cur, query_pruebas))}", border=True)
 
             with st.container():
                 col1, col2 = st.columns([1.5, 1.5])
@@ -253,7 +253,7 @@ if page == "Análisis general":
                     fig1 = px.line(df, x=0, y=1, title='Concursos por mes')
                     fig1.update_layout(
                         title_font=dict(size=20, weight='bold'),
-                        title_x=0.45,
+                        title_x=0.4,
                         xaxis_title=dict(text='Fecha', font=dict(weight='bold')),
                         yaxis_title=dict(text='Valor', font=dict(weight='bold')),
                         yaxis=dict(showgrid=True, gridcolor='lightgray', showticklabels=False),
@@ -273,8 +273,8 @@ if page == "Análisis general":
                     fig2.update_traces(textinfo='percent', textfont_color='white')
                     fig2.update_layout(width=600, 
                                     height=400, 
-                                    title_x=0.5, 
-                                    title_font=dict(size=16, weight='bold'))
+                                    title_x=0.3, 
+                                    title_font=dict(size=20, weight='bold'))
                     st.plotly_chart(fig2, use_container_width=True)
 
             with st.container():
@@ -286,7 +286,7 @@ if page == "Análisis general":
                 fig.update_layout(
                             width=10,
                             height=400,
-                            title_font=dict(size=15, weight='bold'),
+                            title_font=dict(size=20, weight='bold'),
                             title_x=0.5,
                             xaxis_title=dict(text='Provincia', font=dict(size=12, weight='bold')),
                             yaxis_title=dict(text='Nº concursos', font=dict(size=12, weight='bold')))
@@ -302,22 +302,22 @@ if page == "Análisis general":
                     fig.update_layout(
                                         width=800, 
                                         height=500,
-                                        title_font=dict(size = 15, weight='bold'),
-                                        title_x=0.5,
+                                        title_font=dict(size = 20, weight='bold'),
+                                        title_x=0.45,
                                         xaxis_title=dict(text='Categoría', font=dict(size = 12, weight='bold')),
                                         yaxis_title=dict(text='Nº concursos', font=dict(size = 12, weight='bold')))
                     st.plotly_chart(fig, use_container_width=True)
                 with col2:
                     tipos_pruebas = pd.DataFrame(ejecutor_querys(cur, query_pruebas)).head(5)
                     tipos_pruebas["prueba"] = tipos_pruebas[0].apply(lambda x: prueba_norma.get(x) + ' ' + x)
-                    fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas")
+                    fig = px.bar(tipos_pruebas, x = "prueba", y = 1, title = "Pruebas comunes")
                     fig.update_layout(
                                         width=800, 
                                         height=550,
-                                        title_font=dict(size = 15, weight='bold'),
-                                        title_x=0.5,
-                                        xaxis_title=dict(text='Tipo_prueba', font=dict(size = 12, weight='bold')),
-                                        yaxis_title=dict(text='Nº veces', font=dict(size = 12, weight='bold')))
+                                        title_font=dict(size = 20, weight='bold'),
+                                        title_x=0.45,
+                                        xaxis_title=dict(text='Tipo de prueba', font=dict(size = 12, weight='bold')),
+                                        yaxis_title=dict(text='Nº veces aplicada', font=dict(size = 12, weight='bold')))
                     st.plotly_chart(fig, use_container_width=True) 
 
         else:
@@ -453,8 +453,9 @@ elif page == "Análisis de binomios":
                 # Llamo a la función pasando los nombres seleccionados
                 jinete, caballo, edad_caballo, n_concursos, alturas_buenas, promedio_puntos_obs, promedio_veces_cero, binomio = info_jinete_caballo(jinete_seleccionado, caballo_seleccionado)
                 df = info_jinete_caballo(jinete, caballo)[-1]
-                st.write(f"Jinete seleccionado: {jinete}")
-                st.write(f"Caballo seleccionado: {caballo}")
+                st.markdown(f"<p style='font-size:32px;'>Jinete seleccionado: <strong>{jinete}</strong></p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size:32px;'>Caballo seleccionado: <strong>{caballo}</strong></p>", unsafe_allow_html=True)
+
                 st.markdown("""
                 <style>
                 /* Contenedor general de cada métrica */
@@ -494,7 +495,7 @@ elif page == "Análisis de binomios":
                     col3.metric("Promedio puntos obstáculos", f"{promedio_puntos_obs}", border=True)
                     col4.metric("% veces cero puntos", f"{promedio_veces_cero:.2f}%", border=True)
 
-                st.write(f"Pruebas en las que compite el caballo: {', '.join(alturas_buenas)}")
+                st.markdown(f"<p style='font-size:20px;'>Altura de las pruebas en las que ha competido el caballo: <strong>{', '.join(alturas_buenas)}</strong></p>", unsafe_allow_html=True)
 
                 with st.container():
                     col1, col2 = st.columns([1.5, 1.5])
@@ -504,7 +505,7 @@ elif page == "Análisis de binomios":
                         estado_counts.columns = ['estado', 'count']
                         fig = px.pie(estado_counts, values="count", names="estado", title='Porcentaje de finalización pruebas', color_discrete_sequence=colores)
                         fig.update_traces(textinfo='percent', textfont_color='white')
-                        fig.update_layout(width=600, height=400, title_x=0.5, title_font=dict(size=16, weight='bold'))
+                        fig.update_layout(width=600, height=400, title_x=0.3, title_font=dict(size=16, weight='bold'))
                         st.plotly_chart(fig, use_container_width=True)
 
                     with col2:
@@ -517,10 +518,11 @@ elif page == "Análisis de binomios":
                                 x='fecha_prueba',
                                 y='puesto',
                                 hover_data=['prueba', 'concurso', 'estado', 'puesto'],
-                                title=f'Puesto de {jinete} con {caballo} a lo largo del tiempo')
+                                title=f'Evolución del resultado del binomio {jinete}-{caballo}')
                             fig.update_layout(
                                 xaxis_title='Fecha de la Prueba',
-                                yaxis_title='Puesto')
+                                yaxis_title='Puesto',
+                                title_font=dict(size=20, weight='bold'))
                             st.plotly_chart(fig, use_container_width=True)
 
                 st.write(df)
